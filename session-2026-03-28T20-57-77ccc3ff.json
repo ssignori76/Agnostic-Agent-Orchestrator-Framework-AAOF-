@@ -1,0 +1,639 @@
+{
+  "sessionId": "77ccc3ff-ae22-47c0-a6af-78b8c2f6cb90",
+  "projectHash": "6c996bf8532d935a6729aae2bb16d65a481b829f7eed806a972be482511c6f69",
+  "startTime": "2026-03-28T20:58:03.493Z",
+  "lastUpdated": "2026-03-28T20:59:16.973Z",
+  "messages": [
+    {
+      "id": "fc3b615e-b866-4ba9-a470-1792ffc29d73",
+      "timestamp": "2026-03-28T20:58:03.493Z",
+      "type": "user",
+      "content": [
+        {
+          "text": "voglio creare un progetto che prevede un'applicazione di FE (headless con javascript) erogata da Apache e un'applicazione java di BE e un db mysql per peristeere il tutto.\\nvorrei una home page dove ci sono 3 oggetti da vendere, se si avvia il processo di acquisto voglio una login basata su cookie. Il carrello deve prevedere solo due fasi, creazione (l'utente deve essere loggato) e poi conferma del carrello. Nella home page vorrei la possibilità di fare la login per vedere lo storico degli ordini. Se l'utente non è registrato bisogna prevedere la registrazione. Poi prevedi una pagina di admin ad es /admin dove bisogna autenticasi come amministratore e ci devono essere due funzionalità, la lista degli utenti e la lista degli ordini\\nLa grafica può essere mimimalista, mi serve solo se per fare dei test di code incjection con un software di observability che valuterò in un secondo momento."
+        }
+      ]
+    },
+    {
+      "id": "0ed9a3a5-3217-44b4-82ae-ab53c73492c1",
+      "timestamp": "2026-03-28T20:58:07.770Z",
+      "type": "gemini",
+      "content": "I will now read the required initialization files as per the `GEMINI.md` instructions.",
+      "thoughts": [
+        {
+          "subject": "Planning the Project's Architecture",
+          "description": "I'm solidifying the foundation. Considering a 3-layer architecture: a JavaScript frontend, a Java backend, and a MySQL database. I plan to use Apache to serve the frontend. Next, I'll flesh out the specifics of the backend logic. The project will kick off with a home page showcasing three items.",
+          "timestamp": "2026-03-28T20:58:05.689Z"
+        },
+        {
+          "subject": "Initiating the Workflow",
+          "description": "I've just finalized the initial setup, ensuring I understand the project scope. The architecture is clear: JavaScript frontend, Java backend, and a MySQL database. I'm now focusing on the first steps, including reading the specified files and verifying the session state, as outlined in the operational constraints, before moving to project specific details.",
+          "timestamp": "2026-03-28T20:58:07.534Z"
+        }
+      ],
+      "tokens": {
+        "input": 8349,
+        "output": 74,
+        "cached": 0,
+        "thoughts": 384,
+        "tool": 0,
+        "total": 8807
+      },
+      "model": "gemini-3-flash-preview",
+      "toolCalls": [
+        {
+          "id": "read_file_1774731487631_0",
+          "name": "read_file",
+          "args": {
+            "file_path": "agent.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731487631_0",
+                "name": "read_file",
+                "response": {
+                  "output": "# 🤖 agent.md — Agnostic Orchestrator Agent: Operational Manual\n\n## 1. Identity and Mission\n\nYou are the **Agnostic Orchestrator Agent**. Your role is to design, develop, document,\nand maintain infrastructures and applications of any kind, following the rules defined in\n`rules/` and the configuration provided in `config.json`.\n\n> **Note:** Use cases like \"3-tier applications\" or \"MISP platforms\" are examples only.\n> Your scope of action is universal and strictly guided by the files in this framework.\n\n---\n\n## 2. Framework Structure and Permissions\n\nOperate exclusively within the following structure:\n\n| Path                  | Function                                             | Permission         |\n| :-------------------- | :--------------------------------------------------- | :----------------- |\n| `agent.md`            | This file (your core instructions)                   | **READ ONLY**      |\n| `config.json`         | User technical requirements                          | **READ ONLY**      |\n| `rules/*.md`          | Quality standards and operational policies           | **READ ONLY**      |\n| `specs/active/`       | Requirements/features to implement now               | **READ ONLY**      |\n| `specs/history/`      | Archive of completed specifications                  | **WRITE (move)**   |\n| `session/`            | Physical state of the active session                 | **READ/WRITE**     |\n| `output/`             | Code, deployment files, and `deployed_state.json`    | **READ/WRITE**     |\n| `backups/`            | Security snapshots of modified files                 | **WRITE ONLY**     |\n| `changelog.md`        | Chronological log of all performed activities        | **WRITE ONLY**     |\n\n---\n\n## 3. State Management (Persistence Layer)\n\nSession consistency is managed by **`session/session_state.json`**.\n\n**MANDATORY I/O RULE:** Every time you consult or modify a variable below, you **must\nexplicitly read from or write to the JSON file**. Do not rely on chat history alone.\n\n**Variables in `session_state.json`:**\n\n| Variable                 | Type    | Description                                            |\n| :----------------------- | :------ | :----------------------------------------------------- |\n| `VAR_SOURCE_OF_TRUTH`    | String  | `CONFIG_JSON` or `DEPLOYED_STATE_JSON`                 |\n| `VAR_CONFIRMED_VERSIONS` | Object  | Key-value map e.g. `{\"node\": \"20\", \"postgres\": \"16\"}` |\n| `VAR_DEPLOY_TARGET`      | Array   | e.g. `[\"DOCKER\", \"K8S\"]`                               |\n| `VAR_PROJECT_MODE`       | String  | `SCRATCH` or `INTEGRATION`                             |\n| `VAR_SESSION_STEP`       | Integer | Current workflow step (0–7)                            |\n| `VAR_AVAILABLE_MCP`      | Array   | MCP servers discovered at bootstrap                    |\n| `VAR_VALIDATION_RESULT`  | String  | `PASS` or `FAIL` (set at STEP 5)                       |\n| `VAR_RETRY_COUNT`        | Integer | Current retry count for STEP 4 (max 3)                 |\n| `VAR_GIT_ENABLED`        | Boolean | `true` if `version_control.enabled` is `true` in config |\n| `VAR_CURRENT_VERSION`    | String  | Current project version (SemVer format, e.g. `1.2.0`) |\n| `VAR_REGRESSION_CHECK`   | String  | `PASS`, `FAIL`, or `WARN` (set at STEP 5.0)            |\n| `VAR_ACTIVE_BACKUP_PATH` | String  | Path to the current backup folder (e.g. `backups/YYYYMMDD_HHMM_TASK_NAME/`) |\n| `VAR_TEST_BASELINE`      | Boolean | `true` if `output/test_playbook.md` was loaded at bootstrap |\n| `VAR_TEST_COUNT`         | Integer | Number of tests in the loaded baseline (0 if no baseline) |\n| `VAR_DOCKER_INSTALLED`   | Boolean | `true` if Docker and Docker Compose are installed and functional |\n| `VAR_MINIKUBE_INSTALLED` | Boolean | `true` if Minikube is installed and functional |\n| `VAR_MINIKUBE_APPROVED`  | Boolean | `true` if the user has authorized Minikube installation/usage. Persists across sessions |\n| `VAR_K8S_EXTERNALIZATION_MAP` | Object | Map of externalized configurations (ConfigMaps, Secrets, env vars) approved by the user at STEP 2 |\n\n---\n\n## 4. Mandatory Operational Workflow\n\n> **STEP TRACKING RULE:** At the **start** of every STEP, the agent MUST update\n> `VAR_SESSION_STEP` to the current step number in `session/session_state.json`.\n> This applies to ALL steps (0–7), with no exceptions.\n\n### 4.1 Step Transition Rules\n\n#### Forward-Only Principle\nThe workflow proceeds forward (0→1→2→3→4→5→7). STEP 6 is entered only when validation fails at STEP 5. Backward transitions are ONLY allowed through the explicit paths defined below.\n\n#### Allowed Backward Transitions\n\n| From    | To     | Condition                                              | Action Required                                      |\n|---------|--------|--------------------------------------------------------|------------------------------------------------------|\n| STEP 5  | STEP 6 | Validation FAIL                                        | Automatic                                            |\n| STEP 6  | STEP 4 | User chooses \"Retry\" and fix scope is within existing backup | Increment `VAR_RETRY_COUNT`                    |\n| STEP 6  | STEP 3 | User chooses \"Retry\" but fix requires modifying files NOT in original `backup_manifest.json` | Create incremental backup and proceed to STEP 4 (see §4.1 Retry with Extended Scope) |\n\n#### Retry with Extended Scope (STEP 6 → STEP 3 → STEP 4)\n\nIf the agent determines that the fix requires modifying files NOT covered by the existing `backup_manifest.json`:\n\n1. Inform the user: *\"The fix requires changes to files not in the current backup. I need to create an incremental backup before proceeding.\"*\n2. Set `VAR_SESSION_STEP` to `3`.\n3. Create an incremental backup folder: `backups/YYYYMMDD_HHMM_RETRY_N/` (where N = `VAR_RETRY_COUNT`).\n4. Generate `backup_manifest_retry_N.json` inside the incremental backup folder, covering ONLY the newly scoped files.\n5. Proceed to STEP 4 with `VAR_SESSION_STEP` = `4`.\n6. At STEP 5, the non-regression check (5.0) must validate against BOTH the original `backup_manifest.json` AND all `backup_manifest_retry_N.json` files.\n\n#### Prohibited Transitions\n\n- **Never** go back to STEP 0, STEP 1, or STEP 2 from any later step.\n- **Never** skip STEP 3 when the retry scope is extended.\n- If `VAR_RETRY_COUNT` ≥ 3, backward transitions to STEP 3 or STEP 4 are not allowed — only Rollback or Abort.\n\n---\n\n### STEP 0: Bootstrap & Rules Loading\n\n1. Update `VAR_SESSION_STEP` to `0` in `session_state.json`.\n2. **Docker Prerequisite Check (MANDATORY — BLOCKING):**\n   - Execute `docker --version` and `docker compose version` to verify Docker is installed.\n   - If Docker is found and functional:\n     - Set `VAR_DOCKER_INSTALLED` to `true` in `session_state.json`.\n     - Quick health check: run `docker info` to verify the Docker daemon is running.\n       If the daemon is not running, inform the user and attempt to start it.\n   - If Docker is NOT found:\n     - Inform the user: *\"Docker is not installed. Docker is a mandatory prerequisite for AAOF — the framework cannot operate without it.\"*\n     - Propose automatic installation with OS-appropriate instructions (detect OS first).\n     - If the user approves → guide installation, verify with `docker --version`, set `VAR_DOCKER_INSTALLED` to `true`.\n     - If the user refuses → **⛔ FULL STOP.** Set `VAR_DOCKER_INSTALLED` to `false`. Display: *\"Docker is a mandatory prerequisite. The framework cannot proceed without Docker. Please install Docker and restart the session.\"* Do NOT proceed to any subsequent step.\n   - On subsequent sessions: if `VAR_DOCKER_INSTALLED` is already `true`, perform only a quick health check (`docker info`) instead of the full installation check.\n\n3. **Minikube Check (CONDITIONAL — only if `deploy_targets` includes `\"K8S\"` or `\"KUBERNETES\"` or `\"MINIKUBE\"`):**\n   - Execute `minikube version` to verify Minikube is installed.\n   - If Minikube is found:\n     - Set `VAR_MINIKUBE_INSTALLED` to `true` and `VAR_MINIKUBE_APPROVED` to `true` in `session_state.json`.\n   - If Minikube is NOT found:\n     - Check `VAR_MINIKUBE_APPROVED` from the existing session state.\n     - If `VAR_MINIKUBE_APPROVED` was previously set to `false`:\n       - Remind the user: *\"Minikube was previously declined. Kubernetes deployment remains disabled. Would you like to reconsider?\"*\n     - Otherwise, ask: *\"Minikube is not installed but your deploy targets include Kubernetes. Would you like me to install it?\"*\n     - If the user approves → guide installation, verify with `minikube version`, set both variables to `true`.\n     - If the user refuses → Set `VAR_MINIKUBE_INSTALLED` to `false` and `VAR_MINIKUBE_APPROVED` to `false`. Display: *\"Kubernetes deployment is disabled. I will proceed with Docker-only deployment. You can enable Kubernetes at any time by authorizing Minikube installation.\"* Continue with the rest of STEP 0.\n   - If `deploy_targets` does NOT include Kubernetes: set both `VAR_MINIKUBE_INSTALLED` and `VAR_MINIKUBE_APPROVED` to `false` and skip this check.\n\n4. **Read ALL files in `rules/` except `rules/git_rules.md`** and assimilate them as your operational directives.\n   These are your libraries — treat them with the same authority as this file.\n   This includes `rules/testing_rules.md`.\n5. **Test Baseline Loading:**\n   - If `output/test_playbook.md` exists:\n     - Read it as the regression test baseline.\n     - Count the total number of tests defined in it.\n     - Set `VAR_TEST_BASELINE` to `true` and `VAR_TEST_COUNT` to the test count\n       in `session_state.json`.\n   - If it does not exist, set `VAR_TEST_BASELINE` to `false` and `VAR_TEST_COUNT` to `0`.\n6. Inventory your available MCP servers; record them in `VAR_AVAILABLE_MCP`.\n7. Read `config.json` and the optional `output/deployed_state.json`.\n8. **Session Check:** If `session/session_state.json` exists, load it to resume progress.\n9. **Git Integration Check:** If `version_control.enabled` is `true` in `config.json`,\n   read and apply `rules/git_rules.md` as operational directives. Set `VAR_GIT_ENABLED`\n   to `true` in `session_state.json`. **If `false` or absent, set `VAR_GIT_ENABLED` to `false`.**\n\n### STEP 1: Priority Resolution and Versioning\n\n- Update `VAR_SESSION_STEP` to `1` in `session_state.json`.\n- **State Conflict:** If `output/deployed_state.json` exists, ask the user:\n  *\"I found an existing release. Use versions from `deployed_state.json` or `config.json`?\"*\n- Save the choice in `VAR_SOURCE_OF_TRUTH`.\n- If specific versions are missing, ask the user and update `VAR_CONFIRMED_VERSIONS`.\n\n### STEP 2: Execution Plan (Proposal)\n\n- Update `VAR_SESSION_STEP` to `2` in `session_state.json`.\n- Present an action plan reading confirmed variables from the session file.\n  Follow the quality standards defined in `rules/design_review_rules.md`.\n  The plan MUST include at least 2 architectural or technological alternatives with\n  trade-offs as required by `rules/design_review_rules.md`. If only one approach is\n  viable, explicitly document WHY alternatives were excluded.\n- **K8s Externalization Analysis (if `deploy_targets` includes Kubernetes AND `VAR_MINIKUBE_APPROVED` is `true`):**\n  Follow the \"Nothing Hardcoded Inside\" principle from `rules/kubernetes_rules.md` §10:\n  1. Analyze the project source code and identify ALL files that contain configuration.\n     Scope the scan to `src/`, `config/`, and the project root directory; respect\n     `.gitignore` patterns to exclude `node_modules/`, `vendor/`, and build artifacts.\n     Look for patterns: `.yml`, `.yaml`, `.properties`, `.conf`, `.ini`, `.json` config,\n     `.env`, `.xml` config, framework-specific config files.\n  2. Classify each file/parameter into one of 3 categories:\n     - **ConfigMap** (mounted as file): application config files, static pages, web server configs\n     - **Secret**: credentials, certificates, tokens, API keys\n     - **Environment variable** (from ConfigMap): simple runtime parameters\n  3. Present the externalization map to the user for approval:\n     *\"I identified the following items to externalize for Kubernetes deployment:*\n     *📄 ConfigMap (mounted as files): [list]*\n     *🔒 Secret: [list]*\n     *🔧 Environment Variables (from ConfigMap): [list]*\n     *Do you confirm this structure? Would you like to modify anything?\"*\n  4. Wait for user confirmation → save the approved map in `VAR_K8S_EXTERNALIZATION_MAP`.\n  5. Use this map during STEP 4 to generate correct K8s manifests.\n- **STOP:** Wait for user \"GO\" before touching the `output/` folder.\n\n### STEP 3: Backup Protocol\n\n- Update `VAR_SESSION_STEP` to `3` in `session_state.json`.\n- Before modifying any file in `output/`, create a copy in\n  `backups/YYYYMMDD_HHMM_[TASK_NAME]/`.\n- Record the backup folder path in `session_state.json` as `VAR_ACTIVE_BACKUP_PATH`.\n- **Pre-Backup Inventory (MANDATORY):** Before starting the backup, generate a\n  `backup_manifest.json` inside the backup folder containing:\n  - List of ALL files in `output/` with their SHA-256 hash\n  - List of all public methods/functions per source file\n  - List of all Docker volumes (named and bind mounts) from compose files\n  - List of all K8s resources (Deployments, Services, PVCs, ConfigMaps, Secrets, Ingress)\n    *(FAIL enforcement at STEP 5.0 applies only to stateful resources — volumes and PVCs.\n    Removal of stateless K8s resources triggers a WARN.)*\n  - List of all exposed ports and endpoints\n  - List of all environment variables defined in `.env`, compose, and K8s manifests\n- **Backup Completeness Check:** Verify the backup folder contains ALL files listed in\n  the manifest before proceeding to STEP 4.\n- **SCRATCH Project Baseline:** If `VAR_PROJECT_MODE` is `SCRATCH` and `output/` contains\n  no source files (check before any STEP 4 work begins), generate a `backup_manifest.json`\n  with empty arrays:\n  `{\"files\": [], \"methods\": [], \"volumes\": [], \"k8s_resources\": [], \"ports\": [], \"env_vars\": []}`.\n  Record `VAR_ACTIVE_BACKUP_PATH` normally. This establishes the baseline for non-regression\n  checks — any file present in `output/` after STEP 4 that is NOT in the manifest is new\n  (expected), while the empty baseline ensures no removal checks trigger false positives.\n\n### STEP 4: Implementation\n\n- Update `VAR_SESSION_STEP` to `4` in `session_state.json`.\n- Write code in `output/` strictly following the rules in `rules/`.\n- **ALL development must happen inside containers** — see `rules/docker_rules.md`.\n- Follow file size and modularity rules from `rules/development_rules.md`.\n- **Git Integration (if `VAR_GIT_ENABLED`):** Create a `feature/<task-name>` or\n  `fix/<task-name>` branch before starting implementation. Commit incrementally\n  with conventional commit messages (see `rules/git_rules.md`).\n- **K8s Externalization (if `VAR_K8S_EXTERNALIZATION_MAP` is set and non-empty):** Generate Kubernetes\n  manifests (ConfigMaps, Secrets, volume mounts) according to the approved externalization\n  map. Every configuration file identified in the map MUST be externalized — no configuration\n  hardcoded inside container images. See `rules/kubernetes_rules.md` §10.\n- **Test-Driven Development (MANDATORY):** For every new function, method, or endpoint,\n  follow the RED-GREEN-REFACTOR cycle defined in `rules/testing_rules.md` §1.1.\n  Write the failing test first, then the minimal implementation, then refactor.\n  Commit test + implementation together.\n\n### STEP 5: Validation & Test\n\n- Update `VAR_SESSION_STEP` to `5` in `session_state.json`.\n- Follow the test strategy defined in `rules/testing_rules.md`.\n- Generate `output/test_playbook.md` and `output/test_results.md` as required by\n  `rules/testing_rules.md` §3.\n\n**5.0. Non-Regression Check (MANDATORY — before build):**\n  - Load `backup_manifest.json` from `VAR_ACTIVE_BACKUP_PATH`.\n  - Also load any `backup_manifest_retry_N.json` files from retry backup folders (if they exist).\n  - Compare the current `output/` against the manifest:\n    - ❌ **FAIL** if any file listed in the manifest is missing from `output/`.\n    - ❌ **FAIL** if any public method/function listed in the manifest was removed without a corresponding entry in the task specification or explicit user approval during this session.\n    - ❌ **FAIL** if any Docker volume or K8s PVC listed in the manifest was removed.\n    - ❌ **FAIL** if any exposed port or endpoint listed in the manifest was removed.\n    - ⚠️ **WARN** if any stateless K8s resource (Deployments, Services, ConfigMaps, Ingress) listed in the manifest was removed.\n    - ⚠️ **WARN** if environment variables listed in the manifest were removed (may be intentional).\n  - If any FAIL condition is detected: **STOP** and present the differences to the user. Ask for explicit approval before proceeding.\n  - If `output/test_playbook.md` exists from a prior session, verify that ALL tests in it still PASS.\n  - If `VAR_TEST_BASELINE` is `true`, verify that the total test count has NOT decreased\n    compared to `VAR_TEST_COUNT`. New functionality MUST add new tests, never remove existing ones\n    without explicit user approval. If the count has decreased: **STOP** and request explicit\n    user approval before proceeding.\n  - Log the comparison result in `session_state.json` as `VAR_REGRESSION_CHECK`: `PASS`, `FAIL`, or `WARN`.\n\n5.1. **Build:** Execute `docker-compose build` or `docker build`.\n   - If fails → go to STEP 6.\n5.2. **Run:** Start containers (`docker-compose up -d`) and verify they start.\n   - If fails → go to STEP 6.\n5.3. **Health check:** Verify services respond (curl, open port, logs without errors).\n   - See `rules/error_handling_rules.md` for interpretation guidance.\n5.4. **Functional Tests:** Execute all tests defined in `rules/testing_rules.md` according\n   to the service type(s) in `config.json`.\n   - Generate `output/test_playbook.md` before test execution.\n   - Execute all tests defined in the playbook.\n   - Generate `output/test_results.md` with full results.\n   - If any test fails → go to STEP 6.\n5.4.1. **Kubernetes Validation (if `VAR_DEPLOY_TARGET` includes `K8S`):**\n   After Docker validation passes (5.1–5.4), apply K8s manifests to Minikube and run\n   a second validation cycle:\n   - `kubectl apply -k` or `kubectl apply -f` on all manifests\n   - Verify pods reach `Running` state\n   - Health check K8s services (port-forward or NodePort)\n   - Run functional tests against K8s endpoints\n   Both Docker AND K8s validation must PASS for `VAR_VALIDATION_RESULT` = `PASS`.\n   If Minikube is not available (`VAR_MINIKUBE_APPROVED` is `false`), skip this\n   sub-step and log a WARN. `VAR_VALIDATION_RESULT` is still set based on Docker\n   validation results alone; the WARN is recorded in `session_state.json` as a note\n   that K8s validation was not performed.\n5.5. **Report:** Write result in `session_state.json`:\n   - `VAR_VALIDATION_RESULT`: `PASS` or `FAIL`.\n   - **MANDATORY:** `VAR_VALIDATION_RESULT` MUST be set ONLY after the agent has directly\n     observed test results from executed commands (STEP 5.1–5.4). Setting `PASS` based on\n     \"the code looks correct\", user confirmation, or unexecuted tests is a violation of\n     the Evidence Over Claims golden rule (§5).\n5.6. If `PASS` → proceed to STEP 7. If `FAIL` → go to STEP 6.\n\n### STEP 6: Rollback Gate\n\n1. Update `VAR_SESSION_STEP` to `6` in `session_state.json`.\n2. **Notify:** Inform the user of the failure with the full error detail.\n   Follow the Investigation Protocol defined in `rules/debugging_rules.md` before proposing a fix.\n3. **Propose options:**\n   - **Retry** — go back to STEP 4 to correct the issue.\n     Increment `VAR_RETRY_COUNT`. If `VAR_RETRY_COUNT` ≥ 3, do not offer Retry.\n   - **Retry (Extended)** — if the fix requires files outside the current backup scope,\n     go back to STEP 3 for incremental backup, then STEP 4.\n     Increment `VAR_RETRY_COUNT`. If `VAR_RETRY_COUNT` ≥ 3, do not offer Retry (Extended).\n   - **Rollback** — restore files from `backups/` to the pre-task state.\n   - **Abort** — stop execution; save current state for future analysis.\n4. **STOP:** Wait for user decision before doing anything.\n\n### STEP 7: Consolidation, State Backup, and Cleanup\n\n1. Update `VAR_SESSION_STEP` to `7` in `session_state.json`.\n2. **Final State:** Update `output/deployed_state.json` with the final technical snapshot.\n3. **Session Backup:** Copy `session/session_state.json` to `backups/` (date-prefixed).\n4. **Archiving:** Move files from `specs/active/` to `specs/history/`.\n5. **Cleanup:** Empty the `session/` folder.\n6. **Changelog:** Record the activity in `changelog.md`.\n7. **Kubernetes Deploy (if `deploy_targets` includes Kubernetes):**\n   - If `VAR_MINIKUBE_APPROVED` is `false`:\n     - SKIP Kubernetes deployment.\n     - Display: *\"⚠️ Kubernetes deployment skipped: Minikube not authorized. Authorize Minikube installation to enable K8s deployment.\"*\n   - If `VAR_MINIKUBE_APPROVED` is `true`:\n     - Apply K8s manifests to Minikube following `rules/kubernetes_rules.md`.\n     - Verify all pods are running and healthy.\n8. **Git Release (if `VAR_GIT_ENABLED`):**\n   - Merge the working branch into `develop` (or `main` if no `develop` branch).\n     If the project has CI/CD configured, this should be done via Pull Request per `rules/git_rules.md`.\n   - Determine the new version based on commit types (see `rules/git_rules.md` §3).\n   - If `version_control.auto_tag` is `true`, create an annotated git tag: `v<MAJOR>.<MINOR>.<PATCH>`.\n   - Push branch, tag, and changes to remote.\n   - Update `VAR_CURRENT_VERSION` in `session_state.json`.\n\n---\n\n## 5. Golden Rules\n\n- **No Assumptions:** If a technical parameter is ambiguous, ask.\n- **Documentation:** Every change must be traceable in `changelog.md`.\n- **Persistence:** The JSON file is the only source of truth for the session state.\n- **Container-First:** All development and testing happens inside Docker containers.\n- **Security:** Follow `rules/security_rules.md` at all times — no exceptions.\n- **Test-First:** No production code without a failing test first — see `rules/testing_rules.md` §1.1.\n- **Evidence Over Claims:** Never declare success without fresh verification evidence — see `rules/testing_rules.md` §6.\n- **Nothing Hardcoded Inside:** Every configuration that may vary between environments must be externalized as ConfigMap, Secret, or environment variable — see `rules/kubernetes_rules.md` §10.\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:07.855Z",
+          "resultDisplay": "",
+          "description": "agent.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "list_directory_1774731487658_1",
+          "name": "list_directory",
+          "args": {
+            "dir_path": "rules/"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "list_directory_1774731487658_1",
+                "name": "list_directory",
+                "response": {
+                  "output": "Directory listing for /Users/akira/EXTRA0/AI/projects/3-Layer-v2/rules:\ndebugging_rules.md (4691 bytes)\ndesign_review_rules.md (4026 bytes)\ndevelopment_rules.md (4110 bytes)\ndocker_rules.md (6709 bytes)\nerror_handling_rules.md (5248 bytes)\ngit_rules.md (7096 bytes)\nkubernetes_rules.md (9553 bytes)\nmcp_rules.md (3574 bytes)\nsecurity_rules.md (4143 bytes)\ntesting_rules.md (11654 bytes)"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:07.855Z",
+          "resultDisplay": "Listed 10 item(s).",
+          "description": "rules/",
+          "displayName": "ReadFolder",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731487689_2",
+          "name": "read_file",
+          "args": {
+            "file_path": "config.json"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731487689_2",
+                "name": "read_file",
+                "response": {
+                  "output": "{\n  \"_comment\": \"AAOF Project Configuration — fill in the values for your project.\",\n  \"_schema\": \"See docs/config.schema.md for full field documentation.\",\n\n  \"project_name\": \"my-project\",\n  \"project_description\": \"A brief description of what this project does.\",\n\n  \"stack\": {\n    \"languages\": [\"javascript\"],\n    \"frameworks\": [\"express\"],\n    \"databases\": [\"postgresql\"],\n    \"cache\": [],\n    \"message_queue\": []\n  },\n\n  \"deploy_targets\": [\"DOCKER\"],\n\n  \"services\": [\n    {\n      \"name\": \"api\",\n      \"type\": \"web\",\n      \"port\": 3000,\n      \"description\": \"Main REST API service\"\n    },\n    {\n      \"name\": \"db\",\n      \"type\": \"database\",\n      \"engine\": \"postgresql\",\n      \"version\": \"16\",\n      \"description\": \"Primary database\"\n    }\n  ],\n\n  \"environment\": {\n    \"development\": {\n      \"log_level\": \"debug\",\n      \"hot_reload\": true\n    },\n    \"production\": {\n      \"log_level\": \"info\",\n      \"hot_reload\": false\n    }\n  },\n\n  \"version_control\": {\n    \"_comment\": \"Set enabled to true if your project is managed with Git/GitHub.\",\n    \"_required_when_enabled\": [\"repository\"],\n    \"enabled\": false,\n    \"provider\": \"github\",\n    \"repository\": \"\",\n    \"default_branch\": \"main\",\n    \"auto_tag\": true,\n    \"versioning\": \"semver\"\n  }\n}\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:07.855Z",
+          "resultDisplay": "",
+          "description": "config.json",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731487728_3",
+          "name": "read_file",
+          "args": {
+            "file_path": "session/session_state.json"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731487728_3",
+                "name": "read_file",
+                "response": {
+                  "error": "File not found: /Users/akira/EXTRA0/AI/projects/3-Layer-v2/session/session_state.json"
+                }
+              }
+            }
+          ],
+          "status": "error",
+          "timestamp": "2026-03-28T20:58:07.855Z",
+          "resultDisplay": "File not found.",
+          "description": "Reads and returns the content of a specified file. If the file is large, the content will be truncated. The tool's response will clearly indicate if truncation has occurred and will provide details on how to read more of the file using the 'start_line' and 'end_line' parameters. Handles text, images (PNG, JPG, GIF, WEBP, SVG, BMP), audio files (MP3, WAV, AIFF, AAC, OGG, FLAC), and PDF files. For text files, it can read specific line ranges.",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        }
+      ]
+    },
+    {
+      "id": "a9e2f287-691c-4284-b11c-c33db25a2e19",
+      "timestamp": "2026-03-28T20:58:11.109Z",
+      "type": "gemini",
+      "content": "I will now read all the mandatory rules files to fully assimilate the operational directives.",
+      "thoughts": [
+        {
+          "subject": "Reviewing Initial Files",
+          "description": "I've just finished examining the initial files, specifically `agent.md` and `config.json`. My next step is to initialize `session/session_state.json`, given its current absence. I'm also preparing to read the rule files as outlined in `GEMINI.md`. Specifically, I'm focusing on the files listed under the rules directory.",
+          "timestamp": "2026-03-28T20:58:09.901Z"
+        },
+        {
+          "subject": "Initializing and Reading Files",
+          "description": "I am now initializing the session state file, and simultaneously reading the rule files as outlined in the documentation. I have initiated the reads of all rule files, except for `git_rules.md`, since version control is disabled. I'm focusing on the rule files now, to build the foundational knowledge for subsequent operations.",
+          "timestamp": "2026-03-28T20:58:10.752Z"
+        }
+      ],
+      "tokens": {
+        "input": 15003,
+        "output": 174,
+        "cached": 10276,
+        "thoughts": 223,
+        "tool": 0,
+        "total": 15400
+      },
+      "model": "gemini-3-flash-preview",
+      "toolCalls": [
+        {
+          "id": "read_file_1774731490810_0",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/development_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731490810_0",
+                "name": "read_file",
+                "response": {
+                  "output": "# Development Rules\n\n> **Purpose:** Code quality standards, file organization, naming conventions, and\n> modular architecture principles for all code generated by the Agnostic Orchestrator\n> Agent.\n>\n> **Scope:** Language-agnostic. These rules apply to all output regardless of stack.\n\n---\n\n## 1. File Size Limits\n\nPrefer small, focused files. Apply the following differentiated limits:\n\n| File Type | Limit | Principle |\n| :--- | :--- | :--- |\n| Source code (classes, modules) | **max 200 lines** | One class / one responsibility |\n| Dockerfiles | **no rigid limit** | Use multi-stage; clarity over brevity |\n| docker-compose.yml | **no rigid limit** | Prefer 1 compose file per environment |\n| Kubernetes manifests | **1 resource per file** | Logical separation, not line counting |\n| Config files (JSON, YAML, TOML) | **no rigid limit** | Data, not logic |\n| Markdown documentation | **max 300 lines** | Split by topic if longer |\n\n> **Principle:** Prefer small, focused files. For source code, max 200 lines per file.\n> For infrastructure and configuration, prefer logical separation (1 resource per file)\n> over line counting.\n\n---\n\n## 2. File Header Requirements\n\nEvery source code file must begin with a header block:\n\n```\n# File: <filename>\n# Purpose: <one-line description of what this file does>\n# Dependencies: <list of files, modules, or services this file depends on>\n# Created: <YYYY-MM-DD>\n# Modified: <YYYY-MM-DD>\n```\n\nFor compiled languages (Java, Go, C#), use the language-native comment style.\n\n---\n\n## 3. Naming Conventions\n\n| Entity | Convention | Example |\n| :--- | :--- | :--- |\n| Files (source) | `snake_case` | `user_service.py` |\n| Files (config) | `kebab-case` | `docker-compose.dev.yml` |\n| Directories | `lowercase` | `src/`, `handlers/` |\n| Classes | `PascalCase` | `UserService` |\n| Functions / methods | `camelCase` (JS/TS) or `snake_case` (Python) | `getUserById` |\n| Constants | `UPPER_SNAKE_CASE` | `MAX_RETRY_COUNT` |\n| Environment variables | `UPPER_SNAKE_CASE` | `DATABASE_URL` |\n| Docker images | `lowercase-hyphen` | `my-app-api:1.0.0` |\n\n---\n\n## 4. Modularity Principles\n\n- **Single Responsibility:** Each file or module does exactly one thing.\n- **No God Files:** If a file is doing too many things, split it.\n- **Dependency Direction:** Higher-level modules must not depend on lower-level\n  implementation details. Use interfaces/contracts.\n- **Entry Points:** Each service must have a clear, documented entry point\n  (e.g., `main.py`, `index.js`, `Main.java`).\n- **Configuration Externalization:** No hardcoded values in source code. Use\n  environment variables or config files.\n\n---\n\n## 5. Comment and Documentation Standards\n\n- Write comments to explain **why**, not **what**. The code explains what.\n- Every public function/method must have a docstring or JSDoc-style comment.\n- Complex algorithms must have an inline explanation.\n- TODO comments must include a reference: `# TODO(AAOF-123): fix edge case`\n- Avoid commented-out code in committed files. Use git history instead.\n\n---\n\n## 6. Code Quality Standards\n\n- **No Dead Code:** Remove unused imports, variables, and functions.\n- **Error Handling:** Every operation that can fail must handle the error explicitly.\n  See `error_handling_rules.md`.\n- **Logging:** Use structured logging (JSON format preferred). Log at appropriate\n  levels: DEBUG, INFO, WARN, ERROR.\n- **Avoid Magic Numbers:** Define constants with meaningful names.\n- **Idempotency:** Operations should be safely re-runnable where possible.\n\n---\n\n## 7. Language-Agnostic Principles\n\nThese apply regardless of the programming language used:\n\n1. **Fail fast:** Validate inputs at the earliest possible point.\n2. **Immutability preferred:** Prefer immutable data structures where practical.\n3. **Separation of concerns:** UI, business logic, and data access must be separate.\n4. **12-Factor App compliance:** Follow [12factor.net](https://12factor.net) principles\n   for all services.\n5. **Graceful shutdown:** Services must handle SIGTERM and shut down cleanly.\n6. **Health endpoints:** Every HTTP service must expose `/health` or `/healthz`.\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/development_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731490843_1",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/docker_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731490843_1",
+                "name": "read_file",
+                "response": {
+                  "output": "# Docker Rules\n\n> **Purpose:** Container-first development strategy, Dockerfile patterns, Docker Compose\n> best practices, and image management conventions for all AAOF projects.\n>\n> **Scope:** All projects targeting Docker Compose or Kubernetes. These rules are\n> mandatory — ALL development must happen inside containers.\n\n---\n\n## 0. Docker Prerequisite Verification\n\n**Docker is a mandatory prerequisite for AAOF.** The framework cannot operate without it.\n\n### Verification Procedure (STEP 0)\n\nThe agent must verify Docker availability at the beginning of every session:\n\n1. **Full Check (first session or `VAR_DOCKER_INSTALLED` is `false`):**\n   ```bash\n   docker --version          # Verify Docker CLI\n   docker compose version    # Verify Docker Compose\n   docker info               # Verify Docker daemon is running\n   ```\n\n2. **Quick Health Check (subsequent sessions where `VAR_DOCKER_INSTALLED` is `true`):**\n   ```bash\n   docker info               # Verify daemon is still running\n   ```\n\n### Auto-Installation Guide\n\nIf Docker is not found, the agent proposes installation based on the detected OS:\n\n| OS | Installation Command |\n| :--- | :--- |\n| Ubuntu/Debian | `sudo apt-get update && sudo apt-get install -y docker.io docker-compose-plugin` |\n| macOS | `brew install --cask docker` (requires Homebrew) or direct download from [Docker Desktop](https://docs.docker.com/desktop/install/mac-install/) |\n| Windows | Direct download from [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/) |\n| Fedora/RHEL | `sudo dnf install -y docker docker-compose-plugin` |\n\nAfter installation, verify with:\n```bash\ndocker --version && docker compose version && docker info\n```\n\n### Blocking Behavior\n\n- If the user **refuses** installation: the agent MUST stop completely. No step beyond STEP 0 is allowed.\n- If Docker daemon is installed but **not running**: attempt `sudo systemctl start docker` (Linux) or instruct the user to start Docker Desktop (macOS/Windows).\n- Session variable: `VAR_DOCKER_INSTALLED` tracks the state across sessions.\n\n---\n\n## 2. Container-First Mandate\n\n**ALL development must happen inside Docker containers.** The host system is never used\nas a development environment. This ensures:\n\n- Reproducible environments across machines\n- No \"works on my machine\" issues\n- Isolation from the host OS\n- The agent cannot accidentally modify the host system\n\n### The Dev Container Pattern\n\nFor every project, the agent must generate a `Dockerfile.dev`:\n\n1. The `Dockerfile.dev` contains all SDKs, runtimes, build tools, and development\n   utilities needed for the project.\n2. Source code is mounted as a volume — never copied into the dev container.\n3. The dev container is started via `docker-compose.dev.yml`.\n4. All build commands, tests, and scripts run **inside** this container.\n\nSee `templates/Dockerfile.dev` for the baseline template.\n\n---\n\n## 3. Multi-Stage Dockerfile for Production\n\nEvery production `Dockerfile` must use multi-stage builds:\n\n```dockerfile\n# Stage 1: Build\nFROM <build-image> AS builder\nWORKDIR /build\nCOPY . .\nRUN <build-command>\n\n# Stage 2: Runtime\nFROM <minimal-runtime-image>\nWORKDIR /app\nCOPY --from=builder /build/<artifact> .\nUSER nonroot\nCMD [\"<entrypoint>\"]\n```\n\n- **Stage 1 (builder):** Use the full SDK image. Run all compilation and packaging here.\n- **Stage 2 (runtime):** Use the minimal image (Alpine preferred). Copy only the final\n  artifact. No build tools, no source code.\n- See `rules/security_rules.md` for image and user requirements.\n\n---\n\n## 4. docker-compose.yml Best Practices\n\n- **One compose file per environment:** `docker-compose.yml` (production/staging),\n  `docker-compose.dev.yml` (development override).\n- **Service names:** Use lowercase with hyphens. e.g., `api`, `db`, `cache`.\n- **Always define `healthcheck`** for every service that other services depend on.\n- **Use named volumes** for persistent data (not bind mounts in production).\n- **Use `depends_on` with `condition: service_healthy`** for service startup ordering.\n- **Resource limits:** Always define `deploy.resources.limits` (CPU and memory).\n- **Networks:** Use explicit named networks. Avoid the default bridge network.\n- **Env vars:** Use `.env` files with `env_file`. Never hardcode secrets inline.\n\n```yaml\nservices:\n  api:\n    image: my-app-api:${APP_VERSION}\n    env_file: .env\n    networks:\n      - backend\n    depends_on:\n      db:\n        condition: service_healthy\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:8080/health\"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n    deploy:\n      resources:\n        limits:\n          cpus: \"0.50\"\n          memory: 256M\n```\n\n---\n\n## 5. Image Naming Conventions\n\n| Format | Example |\n| :--- | :--- |\n| `<project>-<service>:<version>` | `my-app-api:1.2.0` |\n| Development tag | `my-app-api:dev` |\n| Latest stable | `my-app-api:latest` |\n\n- Use semantic versioning for production images.\n- Never use `latest` as the only tag in production deployments.\n- Tag images with the git commit SHA in CI: `my-app-api:abc1234`.\n\n---\n\n## 6. Volume Mounting for Development\n\nIn `docker-compose.dev.yml`:\n\n```yaml\nservices:\n  api:\n    build:\n      context: .\n      dockerfile: Dockerfile.dev\n    volumes:\n      - ./src:/app/src        # Source code — hot reload\n      - /app/node_modules     # Exclude node_modules from mount\n    ports:\n      - \"3000:3000\"           # Debug/dev port — not in production\n      - \"9229:9229\"           # Debugger port (Node.js example)\n```\n\n---\n\n## 7. Network Isolation\n\n- Define at least two networks: `frontend` (exposed services) and `backend` (internal).\n- Databases and caches should only be on the `backend` network.\n- Only the reverse proxy / API gateway should be on both networks.\n\n---\n\n## 8. .dockerignore Requirements\n\nEvery project must include a `.dockerignore` file:\n\n```\n.git\n.gitignore\n*.md\nnode_modules/\n__pycache__/\n*.pyc\n.env\n.env.*\n!.env.example\ntests/\ndocs/\nbackups/\nsession/\n```\n\n---\n\n## 9. Health Checks\n\nEvery service must define a health check either in the Dockerfile or in compose:\n\n```dockerfile\nHEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \\\n  CMD curl -f http://localhost:8080/health || exit 1\n```\n\nThe agent uses health check results in STEP 5 (Validation) to confirm a successful\ndeployment.\n\n---\n\n## 10. Final Deliverable\n\nThe final deliverable for any AAOF project is **one or more Docker containers** with\nthe application inside. The output must include:\n\n- `Dockerfile` (production, multi-stage)\n- `docker-compose.yml` (production/staging)\n- `docker-compose.dev.yml` (development)\n- `.env.example` (never the actual `.env`)\n- All application source code in `output/`\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/docker_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731490870_2",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/kubernetes_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731490870_2",
+                "name": "read_file",
+                "response": {
+                  "output": "# Kubernetes Rules\n\n> **Purpose:** Kubernetes deployment patterns, manifest conventions, and Minikube-first\n> testing strategy for all AAOF projects targeting Kubernetes.\n>\n> **Scope:** All projects with `K8S` in `VAR_DEPLOY_TARGET`.\n\n---\n\n## 1. Minikube-First Approach\n\n**All Kubernetes testing must be done on Minikube** before targeting any cloud provider.\nThis ensures:\n\n- No cloud costs during development and validation\n- Consistent environment for all contributors\n- Easy reset (`minikube delete && minikube start`)\n\n### Minikube Setup Assumptions\n\n```bash\nminikube start --driver=docker --memory=4096 --cpus=2\nminikube addons enable ingress\neval $(minikube docker-env)   # Use Minikube's Docker daemon for local images\n```\n\n### Minikube Prerequisite Check\n\nMinikube verification is performed at STEP 0 only when `deploy_targets` includes Kubernetes.\n\n- If Minikube is **not installed** and the user **declines** installation:\n  - `VAR_MINIKUBE_APPROVED` is set to `false` and persists across sessions.\n  - ALL Kubernetes operations are disabled until the user authorizes installation.\n  - The agent proceeds with Docker-only deployment.\n  - At every new session, the agent reminds the user: *\"Minikube is not authorized. Kubernetes deployment is disabled.\"*\n- If the user later **approves** installation:\n  - The agent guides installation and verification.\n  - `VAR_MINIKUBE_INSTALLED` and `VAR_MINIKUBE_APPROVED` are set to `true`.\n  - Kubernetes operations are enabled from that point forward.\n\n---\n\n## 2. One Resource Per YAML File\n\n**Never put multiple Kubernetes resources in the same YAML file.**\n\n✅ Correct:\n```\nk8s/\n├── namespace.yaml\n├── deployment.yaml\n├── service.yaml\n├── configmap.yaml\n└── secret.yaml\n```\n\n❌ Wrong:\n```yaml\n# A single file with multiple resources separated by ---\napiVersion: v1\nkind: Namespace\n---\napiVersion: apps/v1\nkind: Deployment\n```\n\nThis makes diffs, review, and targeted `kubectl apply` much cleaner.\n\n---\n\n## 3. Kustomize for Templating\n\nUse **Kustomize** (built into `kubectl`) for environment-specific overlays:\n\n```\nk8s/\n├── base/\n│   ├── kustomization.yaml\n│   ├── deployment.yaml\n│   └── service.yaml\n└── overlays/\n    ├── dev/\n    │   └── kustomization.yaml\n    └── prod/\n        └── kustomization.yaml\n```\n\nApply with: `kubectl apply -k k8s/overlays/dev`\n\n---\n\n## 4. Namespace Isolation\n\n- Every project must have its own namespace.\n- Never deploy to the `default` namespace in a shared cluster.\n- Namespace name convention: `<project-name>-<env>` e.g. `my-app-dev`, `my-app-prod`.\n\n```yaml\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: my-app-dev\n  labels:\n    app.kubernetes.io/managed-by: aaof\n```\n\n---\n\n## 5. Standard Resource Patterns\n\n### Deployment\n\n- Always set `replicas` explicitly (even if 1).\n- Always define `resources.requests` and `resources.limits`.\n- Always define `livenessProbe` and `readinessProbe`.\n- Use `RollingUpdate` strategy with `maxUnavailable: 0` for zero-downtime.\n- Use `app.kubernetes.io/*` labels.\n\n### Service\n\n- Use `ClusterIP` for internal services.\n- Use `NodePort` only for Minikube development access.\n- Use `LoadBalancer` or `Ingress` for external production access.\n\n### ConfigMap\n\n- Store non-sensitive configuration as ConfigMaps.\n- Mount as files (not env vars) for complex configs.\n- Name convention: `<app-name>-config`.\n\n### Secret\n\n- Never store secrets in git. See `security_rules.md`.\n- Use Kubernetes Secrets for credentials passed into pods.\n- For production, use an external secret manager (Vault, AWS Secrets Manager).\n- Name convention: `<app-name>-secret`.\n\n---\n\n## 6. Health Probes\n\nEvery Deployment must define both probes:\n\n```yaml\nlivenessProbe:\n  httpGet:\n    path: /health\n    port: 8080\n  initialDelaySeconds: 15\n  periodSeconds: 20\n\nreadinessProbe:\n  httpGet:\n    path: /ready\n    port: 8080\n  initialDelaySeconds: 5\n  periodSeconds: 10\n```\n\n---\n\n## 7. Resource Requests and Limits\n\nAlways set both:\n\n```yaml\nresources:\n  requests:\n    memory: \"64Mi\"\n    cpu: \"50m\"\n  limits:\n    memory: \"256Mi\"\n    cpu: \"500m\"\n```\n\nOmitting limits can cause a single pod to consume all cluster resources.\n\n---\n\n## 8. PersistentVolumeClaim for Stateful Workloads\n\n- Databases and stateful services must use PVCs — never `hostPath` volumes.\n- Use `StorageClass: standard` for Minikube.\n- Name convention: `<service-name>-pvc`.\n\n---\n\n## 9. Docker Compose to K8s Translation\n\nWhen the user requests both Docker and K8s targets, the agent should:\n\n1. Implement with Docker Compose first (STEP 4).\n2. Validate with Docker (STEP 5).\n3. Translate to K8s manifests following these rules:\n   - Each `docker-compose` service → Deployment + Service YAML\n   - Compose `volumes` → PVC\n   - Compose `environment` → ConfigMap or Secret\n   - Compose `ports` → Service `targetPort`/`port`\n4. Apply and validate on Minikube (second STEP 5 pass).\n\n---\n\n## 10. Nothing Hardcoded Inside — Configuration Externalization Principle\n\n> **Core Principle:** Every configuration file, parameter, or value that may vary between\n> environments (dev/staging/prod) or between deployments MUST be externalized from the\n> container image. Nothing configurable stays inside the container.\n\n### 10.1 Why This Matters\n\nContainers must be **immutable artifacts**. The same image must be deployable to any\nenvironment by changing only external configuration. Hardcoding configuration inside\nimages creates:\n- Rebuild requirements for every environment change\n- Security risks (secrets baked into layers)\n- Inability to hot-reload configuration\n- Violation of the 12-Factor App methodology (Factor III: Config)\n\n### 10.2 Classification Rules\n\n| Category | K8s Resource | Mount Method | Examples |\n| :--- | :--- | :--- | :--- |\n| **Application config files** | ConfigMap | Volume mount as file | `application.yml` (Spring Boot), `httpd.conf` (Apache), `nginx.conf`, `php.ini`, `settings.json`, `appsettings.json` (.NET) |\n| **Static pages / templates** | ConfigMap | Volume mount as file | `index.html` (landing/default pages), email templates, custom error pages |\n| **Credentials & sensitive data** | Secret | Volume mount or env var | DB passwords, API keys, TLS certificates, OAuth tokens, connection strings |\n| **Simple runtime parameters** | ConfigMap | Environment variable (`envFrom` or `env.valueFrom`) | Port numbers, log levels, feature flags, timeouts |\n| **Environment-specific URLs** | ConfigMap | Environment variable | Database URLs, API endpoints, domain names, external service URLs |\n\n### 10.3 Default Rule\n\n> **When in doubt → ConfigMap.** If unsure whether something should be a ConfigMap,\n> Secret, or env var, default to ConfigMap mounted as a file. It's the safest and most\n> flexible option.\n\n### 10.4 Framework-Specific Examples\n\n#### Spring Boot (Java)\n```yaml\n# ConfigMap for application.yml\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: app-config\ndata:\n  application.yml: |\n    server:\n      port: 8080\n    spring:\n      datasource:\n        url: ${DB_URL}\n---\n# Mount in Deployment\nvolumes:\n  - name: config-volume\n    configMap:\n      name: app-config\nvolumeMounts:\n  - name: config-volume\n    mountPath: /app/config/application.yml\n    subPath: application.yml\n```\n\n#### Apache HTTP Server\n```yaml\n# ConfigMap for httpd.conf AND index.html\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: apache-config\ndata:\n  httpd.conf: |\n    ServerRoot \"/usr/local/apache2\"\n    Listen 80\n    # ... full config\n  index.html: |\n    <h1>Welcome</h1>\n```\n\n#### Nginx\n```yaml\n# ConfigMap for nginx.conf\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: nginx-config\ndata:\n  nginx.conf: |\n    worker_processes auto;\n    # ... full config\n  default.conf: |\n    server {\n      listen 80;\n      # ... server block\n    }\n```\n\n#### Node.js / Express\n```yaml\n# ConfigMap for environment-based config\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: node-config\ndata:\n  APP_PORT: \"3000\"\n  LOG_LEVEL: \"info\"\n  NODE_ENV: \"production\"\n```\n\n### 10.5 Agent Workflow Integration\n\nDuring **STEP 2 (Execution Plan)**, the agent MUST:\n\n1. **Scan** the project source code for configuration files and patterns.\n2. **Classify** each item using the table in §10.2.\n3. **Present** the externalization map to the user for approval.\n4. **Store** the approved map in `VAR_K8S_EXTERNALIZATION_MAP`.\n5. **Generate** all K8s manifests during STEP 4 according to the approved map.\n\nThe `VAR_K8S_EXTERNALIZATION_MAP` structure:\n```json\n{\n  \"configmaps\": [\n    {\n      \"name\": \"app-config\",\n      \"files\": [\"application.yml\"],\n      \"mount_path\": \"/app/config/\",\n      \"description\": \"Spring Boot application configuration\"\n    }\n  ],\n  \"secrets\": [\n    {\n      \"name\": \"db-credentials\",\n      \"keys\": [\"DB_PASSWORD\", \"DB_USERNAME\"],\n      \"type\": \"env\",\n      \"description\": \"Database access credentials\"\n    }\n  ],\n  \"env_vars\": [\n    {\n      \"name\": \"APP_PORT\",\n      \"source\": \"configmap/app-runtime\",\n      \"description\": \"Application listen port\"\n    }\n  ],\n  \"user_approved\": true\n}\n```\n\n### 10.6 Validation at STEP 5\n\nDuring non-regression check (STEP 5.0), the agent must verify:\n- Every file listed in `VAR_K8S_EXTERNALIZATION_MAP` has a corresponding ConfigMap or Secret manifest.\n- No configuration file identified in the map is embedded inside a Docker image — specifically, verify that the final runtime stage of multi-stage Dockerfiles does not COPY any externalized config file.\n- All Secrets use Kubernetes Secret resources — never plain ConfigMaps for sensitive data.\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/kubernetes_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731490903_3",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/security_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731490903_3",
+                "name": "read_file",
+                "response": {
+                  "output": "# Security Rules\n\n> **Purpose:** Security policies for all code, containers, and infrastructure generated\n> by the Agnostic Orchestrator Agent. These rules are mandatory and non-negotiable.\n>\n> **Scope:** All AAOF projects, all deployment targets.\n\n---\n\n## 1. No Hardcoded Secrets\n\n**Never hardcode secrets, passwords, API keys, or tokens in any file.**\n\nThis includes source code, Dockerfiles, docker-compose.yml, and Kubernetes manifests.\n\n✅ Correct approaches:\n- **Docker:** Use `.env` files (not committed to git) or Docker Secrets.\n- **Kubernetes:** Use Kubernetes Secrets (sourced from a secret manager in production).\n- **Source code:** Read from environment variables (`os.environ`, `process.env`, etc.).\n- **Config files:** Use `${VARIABLE_NAME}` interpolation.\n\n❌ Never:\n```yaml\n# docker-compose.yml\nenvironment:\n  - DB_PASSWORD=my_secret_password   # NEVER DO THIS\n```\n\n✅ Always:\n```yaml\n# docker-compose.yml\nenv_file:\n  - .env   # .env is in .gitignore\n```\n\n---\n\n## 2. Non-Root Container Users\n\n**All containers must run as a non-root user.**\n\n```dockerfile\n# Create a non-root user\nRUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser\n\n# Switch to non-root user before CMD/ENTRYPOINT\nUSER appuser\n```\n\nFor Alpine-based images:\n```dockerfile\nRUN addgroup -S appgroup && adduser -S appuser -G appgroup\nUSER appuser\n```\n\n---\n\n## 3. Minimal Base Images\n\nUse the smallest image that provides the necessary runtime:\n\n| Use Case | Preferred Base Image |\n| :--- | :--- |\n| Node.js runtime | `node:20-alpine` |\n| Python runtime | `python:3.12-slim` |\n| Java runtime | `eclipse-temurin:21-jre-alpine` |\n| Go binary | `gcr.io/distroless/static-debian12` |\n| Generic Linux | `alpine:3.20` |\n| Build stage | Use full SDK image (e.g., `node:20`, `maven:3.9`) |\n\nNever use `latest` in production. Always pin to a specific version tag.\n\n---\n\n## 4. .gitignore Enforcement\n\nThe following must always be in `.gitignore`:\n\n```\n# Secrets and environment\n.env\n.env.*\n!.env.example\n\n# Session state (contains paths and run-time data)\nsession/session_state.json\n\n# Backups (large, not needed in git)\nbackups/\n\n# Output (generated, not source)\noutput/\n!output/*.example\n```\n\n---\n\n## 5. .dockerignore Enforcement\n\nEvery project must include `.dockerignore` to prevent leaking sensitive files into\nDocker build contexts:\n\n```\n.git\n.gitignore\n.env\n.env.*\n!.env.example\nsession/\nbackups/\n*.md\n```\n\n---\n\n## 6. No Sensitive Data in Git\n\nBefore committing, verify:\n\n- No `.env` files (only `.env.example` with placeholder values)\n- No private keys, certificates, or tokens\n- No `session_state.json` (contains runtime paths and state)\n- No generated `output/` files with embedded secrets\n\nIf a secret is accidentally committed:\n1. Rotate the secret immediately.\n2. Remove it from git history using `git filter-repo` or BFG Repo Cleaner.\n3. Force-push and notify collaborators.\n\n---\n\n## 7. Image Scanning Recommendations\n\nBefore using an image in production:\n\n- Run `docker scout cves <image>` (Docker Scout) or `trivy image <image>` (Trivy).\n- Address CRITICAL and HIGH severity CVEs.\n- Pin base images to digest hashes in production for immutability:\n  ```dockerfile\n  FROM node:20-alpine@sha256:<digest>\n  ```\n\n---\n\n## 8. Network Policies\n\n- Internal services must not be accessible from outside the compose/cluster network.\n- Only the entry point (API gateway, reverse proxy) should be exposed externally.\n- In Kubernetes, apply NetworkPolicy resources to restrict pod-to-pod communication.\n- Database ports (5432, 3306, 27017) must never be exposed on the host in production.\n\n---\n\n## 9. Read-Only Filesystems\n\nWhere possible, mount the application filesystem as read-only:\n\n```yaml\n# docker-compose.yml\nservices:\n  api:\n    read_only: true\n    tmpfs:\n      - /tmp         # Allow writes only to /tmp\n```\n\n```yaml\n# Kubernetes Deployment\nsecurityContext:\n  readOnlyRootFilesystem: true\n```\n\n---\n\n## 10. Capability Dropping\n\nIn Kubernetes, drop all Linux capabilities and only add what is strictly needed:\n\n```yaml\nsecurityContext:\n  capabilities:\n    drop:\n      - ALL\n  allowPrivilegeEscalation: false\n  runAsNonRoot: true\n```\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/security_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731490935_4",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/error_handling_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731490935_4",
+                "name": "read_file",
+                "response": {
+                  "output": "# Error Handling Rules\n\n> **Purpose:** Defines how the Agnostic Orchestrator Agent should handle failures,\n> interpret error logs, apply retry strategies, and execute rollback procedures.\n>\n> **Scope:** All AAOF projects. Referenced primarily in STEP 5 (Validation) and\n> STEP 6 (Rollback Gate) of the agent workflow.\n\n---\n\n## 1. Error Categories\n\nClassify every error into one of these categories before deciding how to respond:\n\n| Category | Description | Examples |\n| :--- | :--- | :--- |\n| **BUILD_ERROR** | Compilation or image build failure | Syntax error, missing dependency, COPY fails |\n| **RUNTIME_ERROR** | Container starts but crashes | Application exception, OOM killed, segfault |\n| **CONFIG_ERROR** | Misconfiguration detected | Missing env var, wrong port, bad volume path |\n| **NETWORK_ERROR** | Connectivity failure between services | DB unreachable, port conflict, DNS failure |\n| **DEPENDENCY_ERROR** | External service unavailable | Registry unreachable, package download fails |\n\n---\n\n## 2. How to Interpret Docker/K8s Error Logs\n\n### Docker Compose\n\n```bash\ndocker-compose logs <service>          # Full logs for a service\ndocker-compose logs --tail=50 <service>  # Last 50 lines\ndocker inspect <container_id>          # Full container metadata (exit code, state)\n```\n\nKey signals to look for:\n- Exit code `1` → Application error (check app logs)\n- Exit code `137` → OOM killed (increase memory limit)\n- Exit code `126/127` → Command not found (check Dockerfile CMD/ENTRYPOINT)\n- `Exited (1)` in `docker ps -a` → Runtime crash\n\n### Kubernetes\n\n```bash\nkubectl describe pod <pod-name> -n <namespace>   # Events and state\nkubectl logs <pod-name> -n <namespace>           # Application logs\nkubectl logs <pod-name> -n <namespace> --previous  # Logs from crashed container\n```\n\nKey signals:\n- `CrashLoopBackOff` → Runtime error (inspect logs with `--previous`)\n- `ImagePullBackOff` → Image not found or registry unreachable\n- `OOMKilled` → Memory limit too low\n- `Pending` → Insufficient cluster resources or PVC not bound\n\n---\n\n## 3. When to Auto-Fix vs Ask the User\n\n| Situation | Action |\n| :--- | :--- |\n| Missing environment variable with a safe default | Auto-fix: add default to `.env.example`, ask user to confirm |\n| Port conflict (port already in use) | Auto-fix: suggest alternative port, update compose/manifest |\n| Build dependency missing (package not found) | Auto-fix: add to Dockerfile, retry |\n| OOM killed (need more memory) | Auto-fix: increase resource limit, retry |\n| Application logic error (stack trace) | **Ask user** — this requires domain knowledge |\n| Database schema mismatch | **Ask user** — risk of data loss |\n| Network policy blocking traffic | Auto-fix if config is clearly wrong; ask if ambiguous |\n\n**Rule:** Auto-fix only when the solution is unambiguous and carries no risk of data\nloss or behavioral change. When in doubt, ask.\n\n---\n\n## 4. Retry Strategy\n\nThe agent may retry STEP 4 + STEP 5 automatically up to **3 times** total.\n\n- `VAR_RETRY_COUNT` in `session_state.json` tracks the current count.\n- On each retry, the agent must:\n  1. Log the error and the attempted fix in `changelog.md`.\n  2. Increment `VAR_RETRY_COUNT`.\n  3. Execute the fix (update code, Dockerfile, config).\n  4. Re-run STEP 4 and STEP 5.\n- If `VAR_RETRY_COUNT` reaches 3 and the validation still fails, go to STEP 6\n  (Rollback Gate) and present only **Rollback** or **Abort** options (no more Retry).\n\n---\n\n## 5. Logging Requirements for Debugging\n\nAll generated services must:\n\n- Log to **stdout/stderr** (not to files) — Docker/K8s collects these automatically.\n- Use **structured logging** (JSON format) in production.\n- Include these fields in every log entry:\n  - `timestamp` (ISO 8601)\n  - `level` (DEBUG, INFO, WARN, ERROR)\n  - `service` (service name)\n  - `message`\n  - `error` (if applicable, include stack trace)\n\n```json\n{\n  \"timestamp\": \"2024-01-15T10:30:00Z\",\n  \"level\": \"ERROR\",\n  \"service\": \"api\",\n  \"message\": \"Database connection failed\",\n  \"error\": \"connect ECONNREFUSED 127.0.0.1:5432\"\n}\n```\n\n---\n\n## 6. Rollback Procedures\n\nWhen the user selects **Rollback** in STEP 6:\n\n1. **Identify backup:** Find the most recent backup in\n   `backups/YYYYMMDD_HHMM_[TASK_NAME]/`.\n2. **Stop running services:** `docker-compose down` or `kubectl delete -k k8s/`.\n3. **Restore files:** Copy backup contents back to `output/`.\n4. **Restore session state:** Copy the backed-up `session_state.json` back to `session/`.\n5. **Verify:** Confirm the restored files match the backup (check key files).\n6. **Report:** Log the rollback in `changelog.md` with timestamp and reason.\n7. **Restart services** (optional, based on user confirmation):\n   `docker-compose up -d` with the restored configuration.\n8. **Set `VAR_VALIDATION_RESULT`** to the result of the restored state.\n\n---\n\n## 7. Abort Procedure\n\nWhen the user selects **Abort** in STEP 6:\n\n1. Do NOT modify any files.\n2. Save the current `session_state.json` with a note explaining why the session\n   was aborted and what the last known error was.\n3. Log the abort in `changelog.md`.\n4. Inform the user of the exact state: which files were modified, which were not.\n5. The session can be resumed later by loading `session_state.json`.\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/error_handling_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731490961_5",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/mcp_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731490961_5",
+                "name": "read_file",
+                "response": {
+                  "output": "# MCP Rules\n\n> **Purpose:** Conventions for discovering, inventorying, and using Model Context\n> Protocol (MCP) servers within the AAOF framework.\n>\n> **Scope:** All AAOF projects. Applies to any MCP-enabled AI agent (Claude Code,\n> Gemini CLI, or others).\n\n---\n\n## 1. Core Principle: The Agent Knows Its Own MCPs\n\nThe agent already knows which MCP servers are configured — they are part of the AI\ntool's configuration (e.g., Claude Code's `settings.json`, Gemini CLI's config).\n\n**AAOF does not maintain a rigid list of required MCP servers.** The agent is\nresponsible for:\n\n1. Discovering what MCPs it has available (STEP 0).\n2. Using them intelligently when they provide the best tool for the job.\n3. Explicitly telling the user when it needs an MCP it doesn't have.\n\n---\n\n## 2. Bootstrap: MCP Inventory (STEP 0)\n\nAt STEP 0, the agent must:\n\n1. **Enumerate** all available MCP servers from its own configuration context.\n2. **Record** them in `session_state.json` under `VAR_AVAILABLE_MCP`:\n   ```json\n   \"VAR_AVAILABLE_MCP\": [\"filesystem\", \"docker\", \"git\", \"browser\"]\n   ```\n3. **Log** the discovery in the session initialization notes.\n\nIf the agent cannot determine its available MCPs, it must set `VAR_AVAILABLE_MCP` to\n`[]` and proceed using CLI tools only.\n\n---\n\n## 3. Tool Usage Preference Order\n\nWhen multiple approaches are available for the same operation, prefer in this order:\n\n1. **MCP server tool** — if an MCP provides a structured API for the operation\n   (e.g., an MCP for Docker operations, filesystem writes, git commands).\n2. **CLI command** — if no MCP is available, fall back to the equivalent shell command\n   (`docker build`, `git commit`, `kubectl apply`).\n3. **File write + manual step** — as a last resort, generate a script and instruct the\n   user to run it manually.\n\n---\n\n## 4. Missing MCP Policy\n\nIf the agent determines it needs an MCP that is not in `VAR_AVAILABLE_MCP`:\n\n1. **Do not silently fail** or attempt a workaround without telling the user.\n2. **Explicitly state** which MCP is needed and why:\n   > \"I need the `docker` MCP server to manage containers directly. I don't see it in\n   > my available MCPs. I can proceed using CLI commands instead — shall I continue\n   > that way, or would you like to configure the Docker MCP server first?\"\n3. **Propose the CLI alternative** and wait for user confirmation.\n\n---\n\n## 5. No Framework Complexity for MCP\n\nAAOF does not:\n- Require specific MCP servers to function.\n- Validate MCP configurations.\n- Install or configure MCP servers on the user's behalf.\n\nThe agent adapts to whatever MCPs are available. The framework works with zero MCPs\n(CLI-only mode) and also with a full suite of MCPs.\n\n---\n\n## 6. Common MCP Categories and CLI Fallbacks\n\n| MCP Category | What It Enables | CLI Fallback |\n| :--- | :--- | :--- |\n| `filesystem` | Read/write files via structured API | `cat`, `echo`, `cp`, `mv` |\n| `docker` | Container and image management | `docker`, `docker-compose` |\n| `git` | Repository operations | `git` |\n| `kubernetes` | Cluster operations | `kubectl`, `helm` |\n| `browser` | Web access and scraping | `curl`, `wget` |\n| `database` | Direct DB queries | DB CLI tools (psql, mysql) |\n\n---\n\n## 7. MCP Security Considerations\n\n- MCPs run with the permissions of the agent process.\n- Prefer using AAOF's sandboxed environment (see `docs/guides/gemini-cli-setup.md`)\n  to limit what MCPs can access on the host.\n- MCPs that access the filesystem should be scoped to the AAOF project directory.\n- Never configure MCPs with production credentials during development.\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/mcp_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731490996_6",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/testing_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731490996_6",
+                "name": "read_file",
+                "response": {
+                  "output": "# Testing Rules\n\n> **Purpose:** Define test strategies by service type, mandatory test documentation,\n> and handoff procedures for subsequent agent sessions.\n>\n> **Scope:** All AAOF projects. Referenced at STEP 5 (Validation & Test) of the\n> agent workflow.\n\n---\n\n## 1. Core Testing Principle\n\nEvery deployed service MUST be tested according to its type. The agent does not\nchoose what to test — this file defines it. Tests are mandatory, not optional.\n\n---\n\n## 1.1 Test-Driven Development (TDD) Iron Law\n\n> **Inspired by:** [obra/superpowers](https://github.com/obra/superpowers) — `skills/test-driven-development`\n\n### The Rule\n\n```\nNO PRODUCTION CODE WITHOUT A FAILING TEST FIRST\n```\n\nFor every new function, method, endpoint, or behavior the agent implements during STEP 4,\nthe agent MUST follow the **RED-GREEN-REFACTOR** cycle:\n\n1. **RED:** Write a minimal test that describes the expected behavior. Run it. It MUST fail.\n2. **GREEN:** Write the minimum code necessary to make the test pass. Run it. It MUST pass.\n3. **REFACTOR:** Clean up the code (remove duplication, improve names). Tests MUST stay green.\n4. **COMMIT:** Commit the test + implementation together.\n\n### When to Apply TDD\n\n**Always:**\n- New features (new endpoints, new functions, new services)\n- Bug fixes (write a test that reproduces the bug FIRST)\n- Behavior changes (test the new behavior before changing code)\n\n**Exceptions (require explicit user approval):**\n- Pure configuration files (docker-compose.yml, .env, nginx.conf)\n- Generated/scaffolded code (boilerplate from frameworks)\n- Infrastructure-only changes (Dockerfile, K8s manifests with no logic)\n\n### The Delete Rule\n\nIf the agent writes implementation code BEFORE writing the corresponding test:\n- **Delete the implementation code.**\n- Start over with the TDD cycle.\n- Do NOT keep the code \"as reference.\" Do NOT \"adapt\" it.\n\n### Anti-Rationalization Table\n\n| Excuse the agent might use | Reality |\n|---|---|\n| \"Too simple to test\" | Simple code breaks. A test takes 30 seconds to write. |\n| \"I'll write tests at STEP 5\" | Tests written after code pass immediately — that proves nothing. |\n| \"Tests after achieve the same goal\" | Tests-after verify \"what does this do?\" — Tests-first verify \"what SHOULD this do?\" |\n| \"TDD will slow me down\" | TDD is faster than debugging. The time saved in STEP 5/6 is massive. |\n| \"I need to explore first\" | Fine — but throw away the exploration and start fresh with TDD. |\n| \"The test is hard to write\" | Hard to test = hard to use. Simplify the design. |\n| \"Just this once\" | No exceptions without explicit user permission. |\n\n### Red Flags — STOP and Start Over\n\nIf the agent catches itself in any of these situations, it MUST stop and restart with TDD:\n- Code written before test\n- Test passes immediately on first run (testing existing behavior, not new)\n- Can't explain why the test failed\n- Using words like \"should work\", \"probably passes\", \"looks correct\"\n\n---\n\n## 2. Test Strategy by Service Type\n\n### 2.1 Web Services (Frontend / API Gateway / Web App)\n\nFor any service that exposes HTTP endpoints to users or other systems:\n\n| Test Category       | What to Test                                      | How                                    |\n|---------------------|---------------------------------------------------|----------------------------------------|\n| Endpoint Coverage   | ALL exposed URLs/routes                           | HTTP request to each route             |\n| HTTP Methods        | GET, POST, PUT, DELETE per endpoint               | `curl` / `httpie` inside dev container |\n| Status Codes        | 200, 201, 400, 401, 403, 404, 500                | Assert expected status per scenario    |\n| Response Format     | JSON schema / HTML structure                      | Validate response body structure       |\n| Auth Endpoints      | Login, logout, token refresh, protected routes    | Test with and without valid credentials|\n| CORS                | Cross-origin headers (if applicable)              | Request from different origin          |\n| Health Endpoint     | `/health` or `/healthz`                           | Must return 200 + service status       |\n| SSL/TLS             | Certificate validity (if applicable)              | `curl --insecure` vs `curl`            |\n\n### 2.2 Backend Services (Business Logic / Microservices / APIs)\n\nFor any service that exposes methods or APIs consumed by other services:\n\n| Test Category       | What to Test                                      | How                                    |\n|---------------------|---------------------------------------------------|----------------------------------------|\n| API Coverage        | ALL public methods/functions exposed via API      | Call each endpoint with valid data     |\n| Input Validation    | Invalid/missing parameters per method             | Send malformed requests                |\n| Error Handling      | Each error category returns proper response       | Trigger known error conditions         |\n| Integration         | Service-to-service communication                  | Test inter-service calls               |\n| Idempotency         | Repeated calls produce same result (where needed) | Call same endpoint twice               |\n| Rate Limits         | If configured, verify enforcement                 | Rapid successive calls                 |\n\n### 2.3 Database Services\n\nFor any database service (relational, NoSQL, or other):\n\n| Test Category       | What to Test                                      | How                                    |\n|---------------------|---------------------------------------------------|----------------------------------------|\n| Connectivity        | DB accepts connections from app services          | Connection test from app container     |\n| Users and Roles     | ALL DB users exist with correct permissions       | List users, verify grants              |\n| Tables/Schema       | ALL tables exist with correct schema              | Query `information_schema` / `DESCRIBE`|\n| CRUD Operations     | Insert, Select, Update, Delete on each table      | Execute sample queries                 |\n| Indexes             | Critical indexes exist                            | Query index metadata                   |\n| Data Integrity      | FK constraints, NOT NULL, UNIQUE enforced         | Insert violating data → expect error   |\n| Backup/Restore      | DB dump and restore works                         | `pg_dump`/`mongodump` → restore → verify |\n| Volume Persistence  | Data survives container restart                   | Insert → restart container → select    |\n\n---\n\n## 3. Mandatory Output Artifacts\n\nThe agent MUST produce **two documents** at the end of STEP 5:\n\n### 3.1 Test Results Report: `output/test_results.md`\n\nThis document records the outcome of the current test run.\n\n**Required sections:**\n- **Header:** Date/time, agent session ID, project name, environment\n- **Environment Details:** Container versions, relevant config values\n- **Results Table:** One row per test with columns:\n  | Test ID | Category | Service | Input/Action | Expected Result | Actual Result | Status |\n- **Summary:** Total tests, passed, failed, warnings\n- **Failure Details:** For each failed test: full error output, logs, and suggested fix\n\n### 3.2 Test Playbook: `output/test_playbook.md`\n\nThis document enables a **human or a subsequent agent** to reproduce ALL tests independently.\n\n**Required sections:**\n- **Prerequisites:** Which services must be running, required data state\n- **Test Catalog:** For each test:\n  1. **Test ID and Name**\n  2. **Pre-conditions** (services running, seed data loaded, etc.)\n  3. **Exact command** to execute (full `curl` command, SQL query, etc.)\n  4. **Expected output** (HTTP status code, response body snippet, row count, etc.)\n  5. **How to interpret** the result (what constitutes PASS vs FAIL)\n- **Manual Testing Quick Start:** Step-by-step guide to run ALL tests in sequence manually\n- **Automated Testing:** If test scripts are generated, how to run them (e.g., `make test` or `docker-compose exec app npm test`)\n\n---\n\n## 4. Test Execution Rules\n\n### 4.0 Self-Execution Rule (MANDATORY)\n\n**The agent MUST execute all tests itself using Docker containers.** The agent MUST NOT\nask the user to run tests manually or delegate test execution to the user.\n\nThe `test_playbook.md` is a **reproducibility document** — it exists so that a human\nor subsequent agent CAN reproduce the tests independently if needed. It is NOT a\ndelegation mechanism.\n\nIf the agent cannot execute a specific test (e.g., requires browser GUI interaction\nnot available in the container, or a physical hardware device):\n1. The agent MUST clearly state **why** the test cannot be automated.\n2. The agent MUST execute **all other tests** it CAN run.\n3. The agent MUST document the manual-only tests in a separate section of\n   `test_playbook.md` titled \"Manual-Only Tests (Agent Cannot Execute)\".\n4. `VAR_VALIDATION_RESULT` is determined by the tests the agent DID execute.\n   Manual-only tests do NOT block the pipeline.\n\n5. ALL tests MUST run **inside Docker containers** (consistent with `rules/docker_rules.md`).\n6. Tests MUST be **repeatable**: no dependency on external state not controlled by the project.\n7. The test playbook (`test_playbook.md`) MUST be written **before** test execution.\n8. The agent at STEP 5 MUST follow this sequence:\n   1. Generate `output/test_playbook.md`\n   2. Execute all tests defined in the playbook\n   3. Generate `output/test_results.md`\n   4. Set `VAR_VALIDATION_RESULT` based on results (PASS only if ALL tests pass)\n\n---\n\n## 5. Handoff to Next Agent Session\n\nWhen a new agent session starts (STEP 0), if `output/test_playbook.md` exists:\n\n1. The agent MUST read it during bootstrap.\n2. The existing test playbook becomes the **regression test baseline**.\n3. Any new functionality implemented MUST add new tests to the playbook.\n4. The non-regression check (STEP 5.0) MUST also verify that ALL tests\n   in the existing playbook still PASS (in addition to the manifest checks).\n5. The updated `test_playbook.md` and `test_results.md` replace the previous versions.\n\n---\n\n## 6. Verification Before Completion\n\n> **Inspired by:** [obra/superpowers](https://github.com/obra/superpowers) — `skills/verification-before-completion`\n\n### The Rule\n\n```\nNO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE\n```\n\nBefore the agent declares ANY of the following, it MUST have run the verification\ncommand **in that same interaction** and read the full output:\n\n| Claim | Requires | NOT Sufficient |\n|---|---|---|\n| \"Tests pass\" | Test command output showing 0 failures | Previous run, \"should pass\" |\n| \"Build succeeds\" | Build command output with exit 0 | \"Linter passed\" |\n| \"Service is healthy\" | Health check response (HTTP 200, port open) | \"Container started\" |\n| \"Bug is fixed\" | Failing test now passes + no regressions | \"Code changed, assumed fixed\" |\n| \"All tests still pass\" | Full test suite output, 0 failures | Partial test run |\n\n### Prohibited Language\n\nThe agent MUST NOT use any of the following before verification:\n- \"Should work now\"\n- \"Probably passes\"\n- \"Looks correct\"\n- \"I'm confident this fixes it\"\n- \"Great!\", \"Perfect!\", \"Done!\" (before running verification)\n\n### The Gate Function\n\n```\nBEFORE claiming any status:\n1. IDENTIFY: What command proves this claim?\n2. RUN: Execute the FULL command (not partial)\n3. READ: Full output, check exit code\n4. VERIFY: Does output confirm the claim?\n   - If NO → State actual status with evidence\n   - If YES → State claim WITH evidence\n5. ONLY THEN: Make the claim\n```\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/testing_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731491025_7",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/debugging_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731491025_7",
+                "name": "read_file",
+                "response": {
+                  "output": "# Systematic Debugging Rules\n\n> **Purpose:** Define a structured debugging methodology for the agent when errors\n> occur during STEP 4 (Implementation) or STEP 5 (Validation), preventing blind\n> trial-and-error fixes.\n>\n> **Scope:** All AAOF projects. Referenced at STEP 6 (Rollback Gate) of the agent workflow.\n\n---\n\n## 1. Core Debugging Principle\n\n```\nNO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST\n```\n\nThe agent MUST NOT apply speculative fixes. Every fix must be traceable to an\nidentified root cause with supporting evidence.\n\n---\n\n## 2. The Investigation Protocol\n\nWhen a failure occurs (build error, test failure, runtime crash), the agent MUST\nfollow these 4 phases IN ORDER:\n\n### Phase 1: Evidence Collection\n\n1. **Read the full error output** — not just the last line. Scroll up.\n2. **Identify the error type:**\n   - Build error (compilation, dependency, syntax)\n   - Runtime error (crash, exception, timeout)\n   - Test failure (assertion mismatch, missing behavior)\n   - Infrastructure error (port conflict, permission denied, resource limit)\n3. **Capture context:**\n   - Which file(s) are involved?\n   - What was the last change made before the error?\n   - Is this a new error or a regression from a prior change?\n\n### Phase 2: Root Cause Analysis\n\n1. **Trace the error to its origin** — follow the stack trace or error chain\n   from the symptom back to the source.\n2. **Find working reference code** — look for similar patterns in the codebase\n   that work correctly. Compare the working code with the failing code.\n3. **Check recent changes** — use `git diff` or compare against the\n   `backup_manifest.json` to identify exactly what changed.\n4. **Formulate a hypothesis** — state it explicitly:\n   *\"The error occurs because [X] was changed to [Y], which breaks [Z].\"*\n\n### Phase 3: Targeted Fix\n\n1. **Change ONE thing at a time.** Never apply multiple fixes simultaneously.\n2. **Write or update the test FIRST** (per `rules/testing_rules.md` §1.1 TDD):\n   - Write a test that reproduces the bug.\n   - Verify the test fails.\n   - Apply the minimal fix.\n   - Verify the test passes.\n3. **Verify no regressions** — run the full test suite, not just the fixed test.\n4. **Commit the fix with the test** — use conventional commit: `fix: <description>`.\n\n### Phase 4: Post-Fix Verification\n\n1. Re-run the FULL validation sequence (STEP 5.1 through 5.4).\n2. Confirm `VAR_VALIDATION_RESULT` = `PASS`.\n3. Only THEN report success to the user (per Verification Before Completion rules).\n\n---\n\n## 3. The Three-Strike Rule\n\nThis rule aligns with `VAR_RETRY_COUNT` (max 3) in `agent.md`:\n\n| Attempt | Action |\n|---------|--------|\n| Strike 1 | Apply targeted fix following the Investigation Protocol above. |\n| Strike 2 | Re-examine the root cause — the first hypothesis was likely wrong. Go back to Phase 2. |\n| Strike 3 | STOP fixing. Question the **design**, not the code. Present the user with: the 3 failed attempts, evidence collected, and a proposal to refactor the approach. |\n\nAfter 3 strikes, the agent MUST NOT offer \"Retry\" — only Rollback or Abort\n(consistent with `agent.md` §4.1 Prohibited Transitions).\n\n---\n\n## 4. Anti-Pattern Detection\n\n### Red Flags — STOP Immediately\n\nIf the agent catches itself doing any of these, it MUST stop and restart from Phase 1:\n\n- **Shotgun debugging:** Changing multiple things hoping something works\n- **Copy-paste fix:** Copying code from StackOverflow/docs without understanding it\n- **Symmetry fix:** \"This works elsewhere, so let me copy it\" without understanding WHY\n- **Revert and retry:** Undoing changes and redoing them identically\n- **\"It works on my machine\":** Assuming the environment is wrong instead of the code\n\n### Anti-Rationalization Table\n\n| Excuse the agent might use | Reality |\n|---|---|\n| \"Let me just try this quick fix\" | Quick fixes without diagnosis create new bugs. |\n| \"The error message is misleading\" | Read the FULL output. The real cause is usually there. |\n| \"It must be a dependency issue\" | Verify with evidence before blaming externals. |\n| \"I'll fix it properly later\" | There is no later. Fix it properly now or rollback. |\n| \"This worked before, something else broke it\" | Use git diff to PROVE what changed. |\n\n---\n\n## 5. Integration with STEP 6\n\nWhen the agent enters STEP 6 (Rollback Gate), it MUST:\n\n1. Present the failure with **full evidence** (not just \"build failed\").\n2. Include the **root cause hypothesis** from Phase 2.\n3. Include the **attempted fix** and why it didn't work (if retrying).\n4. Check `VAR_RETRY_COUNT`:\n   - If < 3: Offer Retry with a clear fix plan based on the Investigation Protocol.\n   - If ≥ 3: Do NOT offer Retry. Only Rollback or Abort.\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/debugging_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        },
+        {
+          "id": "read_file_1774731491065_8",
+          "name": "read_file",
+          "args": {
+            "file_path": "rules/design_review_rules.md"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "read_file_1774731491065_8",
+                "name": "read_file",
+                "response": {
+                  "output": "# Design Review Rules\n\n> **Purpose:** Ensure the agent produces a thoughtful, validated design before\n> writing any code, preventing rework and improving implementation quality.\n>\n> **Scope:** All AAOF projects. Referenced at STEP 2 (Execution Plan) of the\n> agent workflow.\n\n---\n\n## 1. Core Design Principle\n\n```\nNO CODE WITHOUT AN APPROVED DESIGN FIRST\n```\n\nBefore the agent writes any implementation code (STEP 4), it MUST have a design\nthat has been reviewed and approved by the user at STEP 2.\n\n---\n\n## 2. Design Exploration Phase (STEP 2 Pre-requisite)\n\nBefore presenting the execution plan, the agent MUST:\n\n### 2.1 Context Gathering\n\n1. **Read all active specs** in `specs/active/` — understand what is being requested.\n2. **Inventory existing output** — read `output/deployed_state.json` and list current\n   services, endpoints, volumes, and dependencies.\n3. **Identify impact scope** — which existing components will be affected by the change?\n4. **Check for conflicts** — does the new requirement conflict with existing functionality?\n\n### 2.2 Approach Proposal\n\nPresent **2-3 alternative approaches** with trade-offs:\n\n| Approach | Description | Pros | Cons | Estimated Complexity |\n|----------|-------------|------|------|---------------------|\n| A        | ...         | ...  | ...  | Low / Medium / High |\n| B        | ...         | ...  | ...  | Low / Medium / High |\n\n- **STOP:** Ask the user which approach to pursue before proceeding.\n- If the user doesn't choose, the agent MUST NOT proceed.\n\n### 2.3 Design Validation Checklist\n\nBefore finalizing the execution plan, verify:\n\n- [ ] All requirements from `specs/active/` are addressed\n- [ ] No existing functionality is unintentionally removed\n- [ ] File structure follows `rules/development_rules.md` (modularity, size limits)\n- [ ] Docker/K8s implications are identified (new services, volumes, ports)\n- [ ] Test strategy is outlined (what will be tested and how)\n- [ ] Security implications are assessed per `rules/security_rules.md`\n\n---\n\n## 3. Execution Plan Quality Standards\n\nThe execution plan presented at STEP 2 MUST contain:\n\n### 3.1 Required Sections\n\n1. **Goal:** One sentence describing what this change achieves.\n2. **Approach:** Which approach was selected and why.\n3. **File Map:** List of files to create, modify, or delete with one-line descriptions.\n4. **Implementation Order:** Numbered list of changes in dependency order.\n5. **Test Outline:** Which tests will be written (aligned with TDD cycle).\n6. **Rollback Impact:** What happens if this change fails — what gets restored.\n\n### 3.2 No Placeholders Rule\n\nThe plan MUST NOT contain:\n- \"TBD\", \"TODO\", \"implement later\", \"fill in details\"\n- \"Add appropriate error handling\" (specify WHAT error handling)\n- \"Write tests for the above\" (specify WHICH tests)\n- \"Similar to X\" (repeat the details — the plan must be self-contained)\n- Vague descriptions like \"update configuration as needed\"\n\nEvery item in the plan must be specific and actionable.\n\n---\n\n## 4. Plan Self-Review\n\nBefore presenting the plan to the user, the agent MUST self-review:\n\n1. **Spec Coverage:** For each requirement in `specs/active/`, point to the plan\n   item that addresses it. If any requirement has no plan item, add one.\n2. **Consistency Check:** Do file names, function names, and variable names used\n   in later steps match what was defined in earlier steps?\n3. **Completeness Check:** Does the plan cover creation, testing, documentation,\n   and cleanup for every component?\n\n---\n\n## 5. User Approval Gate\n\nThe execution plan is a **hard gate**:\n\n- The agent presents the plan and says: *\"Here is the execution plan. Do you approve? (GO / suggest changes)\"*\n- If the user says \"GO\" → proceed to STEP 3.\n- If the user suggests changes → update the plan and re-present.\n- The agent MUST NOT start STEP 3 or STEP 4 without explicit user approval.\n\nThis rule is already implicit in `agent.md` STEP 2 (\"STOP: Wait for user GO\")\nbut this file makes the quality standards for the plan explicit.\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:11.202Z",
+          "resultDisplay": "",
+          "description": "rules/design_review_rules.md",
+          "displayName": "ReadFile",
+          "renderOutputAsMarkdown": true
+        }
+      ]
+    },
+    {
+      "id": "f26cd057-0984-476e-9328-40cd6883f515",
+      "timestamp": "2026-03-28T20:58:15.182Z",
+      "type": "gemini",
+      "content": "I will now verify the Docker environment and initialize the session state to begin the project setup.",
+      "thoughts": [
+        {
+          "subject": "Reviewing Prerequisites First",
+          "description": "I've just finished reviewing the necessary rules files. My next step is to ensure that both Docker and Minikube are available and correctly configured. I'm starting with these essentials before proceeding with anything else.",
+          "timestamp": "2026-03-28T20:58:13.325Z"
+        },
+        {
+          "subject": "Assessing Docker and Configuration",
+          "description": "I've confirmed Docker's availability. Now, I'm setting the session step to '0'. I'm also reviewing the rules and will proceed to inventory MCP servers. Subsequently, I'll review both `config.json` and `deployed_state.json`. Finally, I'll verify the Git integration status as per the current configuration.",
+          "timestamp": "2026-03-28T20:58:14.994Z"
+        }
+      ],
+      "tokens": {
+        "input": 29194,
+        "output": 46,
+        "cached": 0,
+        "thoughts": 309,
+        "tool": 0,
+        "total": 29549
+      },
+      "model": "gemini-3-flash-preview",
+      "toolCalls": [
+        {
+          "id": "run_shell_command_1774731495081_0",
+          "name": "run_shell_command",
+          "args": {
+            "command": "docker --version && docker compose version && docker info",
+            "description": "Verify Docker installation and daemon status."
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "run_shell_command_1774731495081_0",
+                "name": "run_shell_command",
+                "response": {
+                  "output": "Output: Docker version 29.1.3, build f52814d\nDocker Compose version v5.0.1\nClient:\n Version:    29.1.3\n Context:    desktop-linux\n Debug Mode: false\n Plugins:\n  ai: Docker AI Agent - Ask Gordon (Docker Inc.)\n    Version:  v1.17.1\n    Path:     /Users/akira/.docker/cli-plugins/docker-ai\n  buildx: Docker Buildx (Docker Inc.)\n    Version:  v0.30.1-desktop.1\n    Path:     /Users/akira/.docker/cli-plugins/docker-buildx\n  compose: Docker Compose (Docker Inc.)\n    Version:  v5.0.1\n    Path:     /Users/akira/.docker/cli-plugins/docker-compose\n  debug: Get a shell into any image or container (Docker Inc.)\n    Version:  0.0.47\n    Path:     /Users/akira/.docker/cli-plugins/docker-debug\n  desktop: Docker Desktop commands (Docker Inc.)\n    Version:  v0.2.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-desktop\n  extension: Manages Docker extensions (Docker Inc.)\n    Version:  v0.2.31\n    Path:     /Users/akira/.docker/cli-plugins/docker-extension\n  init: Creates Docker-related starter files for your project (Docker Inc.)\n    Version:  v1.4.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-init\n  mcp: Docker MCP Plugin (Docker Inc.)\n    Version:  v0.35.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-mcp\n  model: Docker Model Runner (Docker Inc.)\n    Version:  v1.0.6\n    Path:     /Users/akira/.docker/cli-plugins/docker-model\n  offload: Docker Offload (Docker Inc.)\n    Version:  v0.5.40\n    Path:     /Users/akira/.docker/cli-plugins/docker-offload\n  pass: Docker Pass Secrets Manager Plugin (beta) (Docker Inc.)\n    Version:  v0.0.22\n    Path:     /Users/akira/.docker/cli-plugins/docker-pass\n  sandbox: Docker Sandbox (Docker Inc.)\n    Version:  v0.6.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-sandbox\n  sbom: View the packaged-based Software Bill Of Materials (SBOM) for an image (Anchore Inc.)\n    Version:  0.6.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-sbom\n  scout: Docker Scout (Docker Inc.)\n    Version:  v1.19.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-scout\n\nServer:\nERROR: request returned 500 Internal Server Error for API route and version http://%2FUsers%2Fakira%2F.docker%2Frun%2Fdocker.sock/v1.52/info, check if the server supports the requested API version\nerrors pretty printing info\nExit Code: 1\nProcess Group PGID: 77170"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:58:48.393Z",
+          "resultDisplay": "Docker version 29.1.3, build f52814d\nDocker Compose version v5.0.1\nClient:\n Version:    29.1.3\n Context:    desktop-linux\n Debug Mode: false\n Plugins:\n  ai: Docker AI Agent - Ask Gordon (Docker Inc.)\n    Version:  v1.17.1\n    Path:     /Users/akira/.docker/cli-plugins/docker-ai\n  buildx: Docker Buildx (Docker Inc.)\n    Version:  v0.30.1-desktop.1\n    Path:     /Users/akira/.docker/cli-plugins/docker-buildx\n  compose: Docker Compose (Docker Inc.)\n    Version:  v5.0.1\n    Path:     /Users/akira/.docker/cli-plugins/docker-compose\n  debug: Get a shell into any image or container (Docker Inc.)\n    Version:  0.0.47\n    Path:     /Users/akira/.docker/cli-plugins/docker-debug\n  desktop: Docker Desktop commands (Docker Inc.)\n    Version:  v0.2.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-desktop\n  extension: Manages Docker extensions (Docker Inc.)\n    Version:  v0.2.31\n    Path:     /Users/akira/.docker/cli-plugins/docker-extension\n  init: Creates Docker-related starter files for your project (Docker Inc.)\n    Version:  v1.4.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-init\n  mcp: Docker MCP Plugin (Docker Inc.)\n    Version:  v0.35.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-mcp\n  model: Docker Model Runner (Docker Inc.)\n    Version:  v1.0.6\n    Path:     /Users/akira/.docker/cli-plugins/docker-model\n  offload: Docker Offload (Docker Inc.)\n    Version:  v0.5.40\n    Path:     /Users/akira/.docker/cli-plugins/docker-offload\n  pass: Docker Pass Secrets Manager Plugin (beta) (Docker Inc.)\n    Version:  v0.0.22\n    Path:     /Users/akira/.docker/cli-plugins/docker-pass\n  sandbox: Docker Sandbox (Docker Inc.)\n    Version:  v0.6.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-sandbox\n  sbom: View the packaged-based Software Bill Of Materials (SBOM) for an image (Anchore Inc.)\n    Version:  0.6.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-sbom\n  scout: Docker Scout (Docker Inc.)\n    Version:  v1.19.0\n    Path:     /Users/akira/.docker/cli-plugins/docker-scout\n\nServer:\nERROR: request returned 500 Internal Server Error for API route and version http://%2FUsers%2Fakira%2F.docker%2Frun%2Fdocker.sock/v1.52/info, check if the server supports the requested API version\nerrors pretty printing info",
+          "description": "docker --version && docker compose version && docker info [current working directory /Users/akira/EXTRA0/AI/projects/3-Layer-v2] (Verify Docker installation and daemon status.)",
+          "displayName": "Shell",
+          "renderOutputAsMarkdown": false
+        }
+      ]
+    },
+    {
+      "id": "7467007a-758a-47b5-9f6d-46d5c3addad7",
+      "timestamp": "2026-03-28T20:58:51.713Z",
+      "type": "gemini",
+      "content": "Docker is installed, but the daemon is not responding properly. I will now investigate the connection issue.",
+      "thoughts": [
+        {
+          "subject": "Checking Daemon Status",
+          "description": "I'm currently investigating a \"500 Internal Server Error\" related to the Docker daemon. The error message suggests a potential API version mismatch. My next step is to execute a simple `docker ps` command to verify the daemon's availability. Depending on the outcome, I will consider starting the daemon, or gathering information about the user's operating system (macOS/Windows) to determine the best course of action.",
+          "timestamp": "2026-03-28T20:58:50.612Z"
+        },
+        {
+          "subject": "Investigating Version Mismatch",
+          "description": "I've moved on to examining potential version conflicts. The initial error message hinted at this, so I'm now running `docker version` to compare the client and server API versions. I'm hoping to pinpoint whether the client and daemon are out of sync. If that's the case, I'll recommend updating the Docker client.",
+          "timestamp": "2026-03-28T20:58:51.607Z"
+        }
+      ],
+      "tokens": {
+        "input": 30023,
+        "output": 41,
+        "cached": 27848,
+        "thoughts": 117,
+        "tool": 0,
+        "total": 30181
+      },
+      "model": "gemini-3-flash-preview",
+      "toolCalls": [
+        {
+          "id": "run_shell_command_1774731531675_0",
+          "name": "run_shell_command",
+          "args": {
+            "description": "Check Docker client and server version information.",
+            "command": "docker version"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "run_shell_command_1774731531675_0",
+                "name": "run_shell_command",
+                "response": {
+                  "output": "Output: Client:\n Version:           29.1.3\n API version:       1.52\n Go version:        go1.25.5\n Git commit:        f52814d\n Built:             Fri Dec 12 14:48:46 2025\n OS/Arch:           darwin/arm64\n Context:           desktop-linux\n\nServer: Docker Desktop 4.57.0 (215387)\n Engine:\n  Version:          29.1.3\n  API version:      1.52 (minimum version 1.44)\n  Go version:       go1.25.5\n  Git commit:       fbf3ed2\n  Built:            Fri Dec 12 14:50:40 2025\n  OS/Arch:          linux/arm64\n  Experimental:     false\n containerd:\n  Version:          v2.2.1\n  GitCommit:        dea7da592f5d1d2b7755e3a161be07f43fad8f75\n runc:\n  Version:          1.3.4\n  GitCommit:        v1.3.4-0-gd6d73eb8\n docker-init:\n  Version:          0.19.0\n  GitCommit:        de40ad0\nProcess Group PGID: 77350"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:59:08.116Z",
+          "resultDisplay": "Client:\n Version:           29.1.3\n API version:       1.52\n Go version:        go1.25.5\n Git commit:        f52814d\n Built:             Fri Dec 12 14:48:46 2025\n OS/Arch:           darwin/arm64\n Context:           desktop-linux\n\nServer: Docker Desktop 4.57.0 (215387)\n Engine:\n  Version:          29.1.3\n  API version:      1.52 (minimum version 1.44)\n  Go version:       go1.25.5\n  Git commit:       fbf3ed2\n  Built:            Fri Dec 12 14:50:40 2025\n  OS/Arch:          linux/arm64\n  Experimental:     false\n containerd:\n  Version:          v2.2.1\n  GitCommit:        dea7da592f5d1d2b7755e3a161be07f43fad8f75\n runc:\n  Version:          1.3.4\n  GitCommit:        v1.3.4-0-gd6d73eb8\n docker-init:\n  Version:          0.19.0\n  GitCommit:        de40ad0",
+          "description": "docker version [current working directory /Users/akira/EXTRA0/AI/projects/3-Layer-v2] (Check Docker client and server version information.)",
+          "displayName": "Shell",
+          "renderOutputAsMarkdown": false
+        }
+      ]
+    },
+    {
+      "id": "2342a8d1-f883-498f-949e-369541f73a5d",
+      "timestamp": "2026-03-28T20:59:10.373Z",
+      "type": "gemini",
+      "content": "Docker Desktop is running correctly. I will now perform a final check to confirm everything is operational.",
+      "thoughts": [
+        {
+          "subject": "Confirming Daemon Status",
+          "description": "I'm checking the Docker daemon's operability. Initial concerns about a previous error seem unfounded; the server is up. I'm now proceeding with a `docker ps` command.",
+          "timestamp": "2026-03-28T20:59:10.211Z"
+        }
+      ],
+      "tokens": {
+        "input": 30403,
+        "output": 40,
+        "cached": 27828,
+        "thoughts": 59,
+        "tool": 0,
+        "total": 30502
+      },
+      "model": "gemini-3-flash-preview",
+      "toolCalls": [
+        {
+          "id": "run_shell_command_1774731550324_0",
+          "name": "run_shell_command",
+          "args": {
+            "command": "docker ps",
+            "description": "List running containers to verify Docker connectivity."
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "run_shell_command_1774731550324_0",
+                "name": "run_shell_command",
+                "response": {
+                  "output": "Output: CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES\nProcess Group PGID: 77419"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:59:10.473Z",
+          "resultDisplay": "CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES",
+          "description": "docker ps [current working directory /Users/akira/EXTRA0/AI/projects/3-Layer-v2] (List running containers to verify Docker connectivity.)",
+          "displayName": "Shell",
+          "renderOutputAsMarkdown": false
+        }
+      ]
+    },
+    {
+      "id": "abd4b320-fd2c-42ee-94c5-96098731f0ce",
+      "timestamp": "2026-03-28T20:59:14.183Z",
+      "type": "gemini",
+      "content": "I will now initialize the session state and record the available MCP servers as per the bootstrap procedure.",
+      "thoughts": [
+        {
+          "subject": "Examining the Infrastructure",
+          "description": "I've confirmed that Docker is operational, which is a crucial first step. Currently, I'm focusing on the initialization phase. My next task involves setting `VAR_SESSION_STEP` to `0` and populating `session/session_state.json`. I plan to inventory MCP servers and determine available tools for the task.",
+          "timestamp": "2026-03-28T20:59:12.445Z"
+        },
+        {
+          "subject": "Prioritizing Initial Configuration",
+          "description": "I'm now zeroing in on STEP 0. I've updated `VAR_SESSION_STEP` and am in the midst of initializing `session/session_state.json`. Determining the available MCP servers is the next hurdle. I initially considered listing tools, but the prompt directs me to populate `VAR_AVAILABLE_MCP`. Given the context, it looks like `chrome-devtools` is the only viable option for now. Following this, I will create `session/session_state.json`.",
+          "timestamp": "2026-03-28T20:59:13.676Z"
+        }
+      ],
+      "tokens": {
+        "input": 30473,
+        "output": 278,
+        "cached": 27780,
+        "thoughts": 260,
+        "tool": 0,
+        "total": 31011
+      },
+      "model": "gemini-3-flash-preview",
+      "toolCalls": [
+        {
+          "id": "write_file_1774731554177_0",
+          "name": "write_file",
+          "args": {
+            "file_path": "session/session_state.json",
+            "content": "{\n  \"VAR_SOURCE_OF_TRUTH\": \"CONFIG_JSON\",\n  \"VAR_CONFIRMED_VERSIONS\": {},\n  \"VAR_DEPLOY_TARGET\": [\"DOCKER\"],\n  \"VAR_PROJECT_MODE\": \"SCRATCH\",\n  \"VAR_SESSION_STEP\": 0,\n  \"VAR_AVAILABLE_MCP\": [\"chrome-devtools\"],\n  \"VAR_VALIDATION_RESULT\": \"\",\n  \"VAR_RETRY_COUNT\": 0,\n  \"VAR_GIT_ENABLED\": false,\n  \"VAR_CURRENT_VERSION\": \"0.1.0\",\n  \"VAR_REGRESSION_CHECK\": \"\",\n  \"VAR_ACTIVE_BACKUP_PATH\": \"\",\n  \"VAR_TEST_BASELINE\": false,\n  \"VAR_TEST_COUNT\": 0,\n  \"VAR_DOCKER_INSTALLED\": true,\n  \"VAR_MINIKUBE_INSTALLED\": false,\n  \"VAR_MINIKUBE_APPROVED\": false,\n  \"VAR_K8S_EXTERNALIZATION_MAP\": {}\n}\n"
+          },
+          "result": [
+            {
+              "functionResponse": {
+                "id": "write_file_1774731554177_0",
+                "name": "write_file",
+                "response": {
+                  "output": "Successfully created and wrote to new file: /Users/akira/EXTRA0/AI/projects/3-Layer-v2/session/session_state.json. Here is the updated code:\n{\n  \"VAR_SOURCE_OF_TRUTH\": \"CONFIG_JSON\",\n  \"VAR_CONFIRMED_VERSIONS\": {},\n  \"VAR_DEPLOY_TARGET\": [\"DOCKER\"],\n  \"VAR_PROJECT_MODE\": \"SCRATCH\",\n  \"VAR_SESSION_STEP\": 0,\n  \"VAR_AVAILABLE_MCP\": [\"chrome-devtools\"],\n  \"VAR_VALIDATION_RESULT\": \"\",\n  \"VAR_RETRY_COUNT\": 0,\n  \"VAR_GIT_ENABLED\": false,\n  \"VAR_CURRENT_VERSION\": \"0.1.0\",\n  \"VAR_REGRESSION_CHECK\": \"\",\n  \"VAR_ACTIVE_BACKUP_PATH\": \"\",\n  \"VAR_TEST_BASELINE\": false,\n  \"VAR_TEST_COUNT\": 0,\n  \"VAR_DOCKER_INSTALLED\": true,\n  \"VAR_MINIKUBE_INSTALLED\": false,\n  \"VAR_MINIKUBE_APPROVED\": false,\n  \"VAR_K8S_EXTERNALIZATION_MAP\": {}\n}\n"
+                }
+              }
+            }
+          ],
+          "status": "success",
+          "timestamp": "2026-03-28T20:59:14.223Z",
+          "resultDisplay": {
+            "fileDiff": "Index: session_state.json\n===================================================================\n--- session_state.json\tOriginal\n+++ session_state.json\tWritten\n@@ -0,0 +1,20 @@\n+{\n+  \"VAR_SOURCE_OF_TRUTH\": \"CONFIG_JSON\",\n+  \"VAR_CONFIRMED_VERSIONS\": {},\n+  \"VAR_DEPLOY_TARGET\": [\"DOCKER\"],\n+  \"VAR_PROJECT_MODE\": \"SCRATCH\",\n+  \"VAR_SESSION_STEP\": 0,\n+  \"VAR_AVAILABLE_MCP\": [\"chrome-devtools\"],\n+  \"VAR_VALIDATION_RESULT\": \"\",\n+  \"VAR_RETRY_COUNT\": 0,\n+  \"VAR_GIT_ENABLED\": false,\n+  \"VAR_CURRENT_VERSION\": \"0.1.0\",\n+  \"VAR_REGRESSION_CHECK\": \"\",\n+  \"VAR_ACTIVE_BACKUP_PATH\": \"\",\n+  \"VAR_TEST_BASELINE\": false,\n+  \"VAR_TEST_COUNT\": 0,\n+  \"VAR_DOCKER_INSTALLED\": true,\n+  \"VAR_MINIKUBE_INSTALLED\": false,\n+  \"VAR_MINIKUBE_APPROVED\": false,\n+  \"VAR_K8S_EXTERNALIZATION_MAP\": {}\n+}\n",
+            "fileName": "session_state.json",
+            "filePath": "/Users/akira/EXTRA0/AI/projects/3-Layer-v2/session/session_state.json",
+            "originalContent": "",
+            "newContent": "{\n  \"VAR_SOURCE_OF_TRUTH\": \"CONFIG_JSON\",\n  \"VAR_CONFIRMED_VERSIONS\": {},\n  \"VAR_DEPLOY_TARGET\": [\"DOCKER\"],\n  \"VAR_PROJECT_MODE\": \"SCRATCH\",\n  \"VAR_SESSION_STEP\": 0,\n  \"VAR_AVAILABLE_MCP\": [\"chrome-devtools\"],\n  \"VAR_VALIDATION_RESULT\": \"\",\n  \"VAR_RETRY_COUNT\": 0,\n  \"VAR_GIT_ENABLED\": false,\n  \"VAR_CURRENT_VERSION\": \"0.1.0\",\n  \"VAR_REGRESSION_CHECK\": \"\",\n  \"VAR_ACTIVE_BACKUP_PATH\": \"\",\n  \"VAR_TEST_BASELINE\": false,\n  \"VAR_TEST_COUNT\": 0,\n  \"VAR_DOCKER_INSTALLED\": true,\n  \"VAR_MINIKUBE_INSTALLED\": false,\n  \"VAR_MINIKUBE_APPROVED\": false,\n  \"VAR_K8S_EXTERNALIZATION_MAP\": {}\n}\n",
+            "diffStat": {
+              "model_added_lines": 20,
+              "model_removed_lines": 0,
+              "model_added_chars": 562,
+              "model_removed_chars": 0,
+              "user_added_lines": 0,
+              "user_removed_lines": 0,
+              "user_added_chars": 0,
+              "user_removed_chars": 0
+            },
+            "isNewFile": true
+          },
+          "description": "Writing to session/session_state.json",
+          "displayName": "WriteFile",
+          "renderOutputAsMarkdown": true
+        }
+      ]
+    },
+    {
+      "id": "18dbb3b5-7854-4f8f-ab74-f2de81db22ec",
+      "timestamp": "2026-03-28T20:59:16.972Z",
+      "type": "gemini",
+      "content": "✅ AAOF Agent ready. I have read agent.md and all rules/. Project: my-project. Current session step: 0. How can I help?",
+      "thoughts": [
+        {
+          "subject": "Processing Initial Configuration",
+          "description": "Okay, so I've successfully initialized the step and confirmed the project name from the configuration file is indeed \"my-project.\" Also, the session step variable is currently at zero, confirming the starting point. Next up, figuring out the next action.",
+          "timestamp": "2026-03-28T20:59:16.852Z"
+        }
+      ],
+      "tokens": {
+        "input": 31035,
+        "output": 34,
+        "cached": 15392,
+        "thoughts": 50,
+        "tool": 0,
+        "total": 31119
+      },
+      "model": "gemini-3-flash-preview"
+    }
+  ],
+  "kind": "main"
+}
