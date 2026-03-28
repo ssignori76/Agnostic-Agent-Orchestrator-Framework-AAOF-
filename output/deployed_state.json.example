@@ -1,0 +1,28 @@
+{
+  "_comment": "AAOF Deployed State — written by the agent at STEP 7. Represents the last successful deployment.",
+  "project_name": "my-project",
+  "deployed_at": "2024-01-15T10:30:00Z",
+  "deployed_by": "aaof-agent",
+  "version": "1.0.0",
+  "deploy_target": "DOCKER",
+  "services": [
+    {
+      "name": "api",
+      "image": "my-project-api:1.0.0",
+      "port": 3000,
+      "status": "running"
+    },
+    {
+      "name": "db",
+      "image": "postgresql:16",
+      "port": 5432,
+      "status": "running"
+    }
+  ],
+  "confirmed_versions": {
+    "node": "20",
+    "postgresql": "16"
+  },
+  "validation_result": "PASS",
+  "changelog_entry": "2024-01-15: Initial deployment of my-project v1.0.0"
+}
