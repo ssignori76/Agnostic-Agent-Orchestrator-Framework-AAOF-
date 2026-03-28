@@ -2455,3 +2455,1556 @@ tu che ne pensi?
 
 valuta tutto l'output per capire se si è comportato come secondo le regole del nostro framework
 valuta se ci sono miglioramenti che possiamo apportare
+
+
+
+➜  output find .  -exec cat {} \;
+cat: .: Is a directory
+cat: ./be: Is a directory
+# File: Dockerfile
+# Purpose: Spring Boot Java 21 backend application.
+# Dependencies: Eclipse Temurin 21
+# Created: 2026-03-28
+
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+WORKDIR /build
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn package -DskipTests
+
+# Stage 2: Runtime
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+COPY --from=builder /build/target/*.jar app.jar
+
+# Fix permissions
+RUN chown -R appuser:appgroup /app
+
+USER appuser
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "app.jar"]
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+        <modelVersion>4.0.0</modelVersion>
+        <parent>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-parent</artifactId>
+                <version>3.3.0</version>
+                <relativePath/> <!-- lookup parent from repository -->
+        </parent>
+        <groupId>com.example</groupId>
+        <artifactId>ecommerce-be</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <name>ecommerce-be</name>
+        <description>E-commerce Backend for AAOF Demo</description>
+        <properties>
+                <java.version>21</java.version>
+        </properties>
+        <dependencies>
+                <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-data-jpa</artifactId>
+                </dependency>
+                <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-security</artifactId>
+                </dependency>
+                <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-web</artifactId>
+                </dependency>
+                <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-actuator</artifactId>
+                </dependency>
+                <dependency>
+                        <groupId>com.mysql</groupId>
+                        <artifactId>mysql-connector-j</artifactId>
+                        <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <optional>true</optional>
+                </dependency>
+                <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-test</artifactId>
+                        <scope>test</scope>
+                </dependency>
+                <dependency>
+                        <groupId>org.springframework.security</groupId>
+                        <artifactId>spring-security-test</artifactId>
+                        <scope>test</scope>
+                </dependency>
+        </dependencies>
+
+        <build>
+                <plugins>
+                        <plugin>
+                                <groupId>org.springframework.boot</groupId>
+                                <artifactId>spring-boot-maven-plugin</artifactId>
+                                <configuration>
+                                        <excludes>
+                                                <exclude>
+                                                        <groupId>org.projectlombok</groupId>
+                                                        <artifactId>lombok</artifactId>
+                                                </exclude>
+                                        </excludes>
+                                </configuration>
+                        </plugin>
+                </plugins>
+        </build>
+
+</project>
+cat: ./be/src: Is a directory
+cat: ./be/src/test: Is a directory
+cat: ./be/src/test/java: Is a directory
+cat: ./be/src/test/java/com: Is a directory
+cat: ./be/src/test/java/com/example: Is a directory
+cat: ./be/src/test/java/com/example/ecommerce: Is a directory
+// File: EcommerceBeApplicationTests.java
+// Purpose: Basic integration tests for the ecommerce backend.
+// Dependencies: Spring Boot Test
+// Created: 2026-03-28
+// Modified: 2026-03-28
+
+package com.example.ecommerce;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class EcommerceBeApplicationTests {
+
+        @LocalServerPort
+        private int port;
+
+        @Autowired
+        private TestRestTemplate restTemplate;
+
+        @Test
+        void healthEndpointShouldBeAvailable() {
+                ResponseEntity<String> response = restTemplate.getForEntity("http://localhost:" + port + "/actuator/health", String.class);
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        }
+}
+cat: ./be/src/main: Is a directory
+cat: ./be/src/main/resources: Is a directory
+# File: application.properties
+# Purpose: Configuration for Spring Boot backend.
+# Dependencies: MySQL, Actuator
+# Created: 2026-03-28
+
+spring.application.name=ecommerce-be
+
+# Database
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ecommerce}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:root}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:rootpassword}
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Actuator
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
+
+# Session configuration
+server.servlet.session.cookie.http-only=true
+server.servlet.session.cookie.same-site=lax
+cat: ./be/src/main/java: Is a directory
+cat: ./be/src/main/java/com: Is a directory
+cat: ./be/src/main/java/com/example: Is a directory
+cat: ./be/src/main/java/com/example/ecommerce: Is a directory
+// File: EcommerceBeApplication.java
+// Purpose: Entry point for the Spring Boot application.
+// Dependencies: Spring Boot
+// Created: 2026-03-28
+
+package com.example.ecommerce;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class EcommerceBeApplication {
+
+        public static void main(String[] args) {
+                SpringApplication.run(EcommerceBeApplication.class, args);
+        }
+
+}
+cat: ./be/src/main/java/com/example/ecommerce/repository: Is a directory
+// File: OrderRepository.java
+// Purpose: Repository for Order entity.
+// Created: 2026-03-28
+
+package com.example.ecommerce.repository;
+
+import com.example.ecommerce.model.Order;
+import com.example.ecommerce.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    List<Order> findByUser(User user);
+}
+// File: ProductRepository.java
+// Purpose: JPA Repository for Product entity.
+// Dependencies: Spring Data JPA
+// Created: 2026-03-28
+
+package com.example.ecommerce.repository;
+
+import com.example.ecommerce.model.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProductRepository extends JpaRepository<Product, Long> {
+}
+// File: UserRepository.java
+// Purpose: JPA Repository for User entity.
+// Dependencies: Spring Data JPA
+// Created: 2026-03-28
+
+package com.example.ecommerce.repository;
+
+import com.example.ecommerce.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByUsername(String username);
+}
+// File: SecurityConfig.java
+// Purpose: Security configuration for Spring Security.
+// Dependencies: Spring Security
+// Created: 2026-03-28
+
+package com.example.ecommerce;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/health", "/api/products/**", "/api/auth/register", "/api/auth/me").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .httpBasic(Customizer.withDefaults()) // Permette il login via basic auth per semplicità nel test
+            .formLogin(form -> form
+                .loginPage("/login.html")
+                .loginProcessingUrl("/api/auth/login")
+                .defaultSuccessUrl("/index.html", true)
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/api/auth/logout")
+                .logoutSuccessUrl("/index.html")
+                .permitAll());
+
+        return http.build();
+    }
+}
+cat: ./be/src/main/java/com/example/ecommerce/controller: Is a directory
+// File: AdminController.java
+// Purpose: Admin-only controller for viewing users and orders.
+// Created: 2026-03-28
+
+package com.example.ecommerce.controller;
+
+import com.example.ecommerce.model.Order;
+import com.example.ecommerce.model.User;
+import com.example.ecommerce.repository.OrderRepository;
+import com.example.ecommerce.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin")
+public class AdminController {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @GetMapping("/orders")
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+}
+// File: ProductController.java
+// Purpose: Controller for managing products.
+// Dependencies: ProductRepository
+// Created: 2026-03-28
+
+package com.example.ecommerce.controller;
+
+import com.example.ecommerce.model.Product;
+import com.example.ecommerce.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @GetMapping
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Product getProductById(@PathVariable Long id) {
+        return productRepository.findById(id).orElse(null);
+    }
+}
+// File: OrderController.java
+// Purpose: Controller for managing customer orders.
+// Created: 2026-03-28
+
+package com.example.ecommerce.controller;
+
+import com.example.ecommerce.model.Order;
+import com.example.ecommerce.model.OrderItem;
+import com.example.ecommerce.model.Product;
+import com.example.ecommerce.model.User;
+import com.example.ecommerce.repository.OrderRepository;
+import com.example.ecommerce.repository.ProductRepository;
+import com.example.ecommerce.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @PostMapping
+    public ResponseEntity<?> createOrder(@RequestBody List<Map<String, Object>> items, Authentication auth) {
+        User user = userRepository.findByUsername(auth.getName()).orElse(null);
+        if (user == null) return ResponseEntity.status(401).build();
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setStatus("CONFIRMED");
+        order.setTotalAmount(0.0);
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        double total = 0;
+
+        for (Map<String, Object> item : items) {
+            Long productId = Long.valueOf(item.get("productId").toString());
+            Integer quantity = Integer.valueOf(item.get("quantity").toString());
+            Product product = productRepository.findById(productId).orElse(null);
+
+            if (product != null) {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrder(order);
+                orderItem.setProduct(product);
+                orderItem.setQuantity(quantity);
+                orderItem.setPrice(product.getPrice());
+                orderItems.add(orderItem);
+                total += product.getPrice() * quantity;
+            }
+        }
+
+        order.setItems(orderItems);
+        order.setTotalAmount(total);
+        orderRepository.save(order);
+
+        return ResponseEntity.ok(order);
+    }
+
+    @GetMapping("/history")
+    public List<Order> getOrderHistory(Authentication auth) {
+        User user = userRepository.findByUsername(auth.getName()).orElse(null);
+        return orderRepository.findByUser(user);
+    }
+}
+// File: AuthController.java
+// Purpose: Authentication controller for login and registration.
+// Dependencies: Spring Security, UserRepository
+// Created: 2026-03-28
+
+package com.example.ecommerce.controller;
+
+import com.example.ecommerce.model.User;
+import com.example.ecommerce.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    // Password encoder bean will be defined in SecurityConfig
+    @Autowired(required = false)
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody User user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User already exists");
+        }
+        // In a real app we'd hash the password. For now we use it as is for easier testing.
+        if (passwordEncoder != null) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        user.setRole("ROLE_USER");
+        userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered");
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(org.springframework.security.core.Authentication auth) {
+        if (auth == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User user = userRepository.findByUsername(auth.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(Map.of("username", user.getUsername(), "role", user.getRole()));
+    }
+}
+cat: ./be/src/main/java/com/example/ecommerce/model: Is a directory
+// File: Order.java
+// Purpose: Entity representing an order.
+// Created: 2026-03-28
+
+package com.example.ecommerce.model;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "orders")
+@Data
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    private String status;
+    private Double totalAmount;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItem> items;
+}
+// File: OrderItem.java
+// Purpose: Entity representing a single item in an order.
+// Created: 2026-03-28
+
+package com.example.ecommerce.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Entity
+@Table(name = "order_items")
+@Data
+public class OrderItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
+    private Order order;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    private Integer quantity;
+    private Double price;
+}
+// File: Product.java
+// Purpose: Entity representing a product.
+// Dependencies: JPA
+// Created: 2026-03-28
+
+package com.example.ecommerce.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "products")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    private String description;
+
+    @Column(nullable = false)
+    private Double price;
+
+    private String imageUrl;
+}
+// File: User.java
+// Purpose: Entity representing a user in the system.
+// Dependencies: JPA
+// Created: 2026-03-28
+
+package com.example.ecommerce.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private String role; // e.g., ROLE_USER, ROLE_ADMIN
+}
+cat: ./be/src/main/java/com/example/ecommerce/service: Is a directory
+// File: MyUserDetailsService.java
+// Purpose: Load user-specific data for Spring Security.
+// Created: 2026-03-28
+
+package com.example.ecommerce.service;
+
+import com.example.ecommerce.model.User;
+import com.example.ecommerce.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+
+@Service
+public class MyUserDetailsService implements UserDetailsService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                Collections.singletonList(new SimpleGrantedAuthority(user.getRole()))
+        );
+    }
+}
+cat: ./k8s: Is a directory
+cat: ./k8s/base: Is a directory
+# File: httpd.conf (Minimal for K8s)
+ServerRoot "/usr/local/apache2"
+Listen 8080
+
+LoadModule mpm_event_module modules/mod_mpm_event.so
+LoadModule authn_file_module modules/mod_authn_file.so
+LoadModule authn_core_module modules/mod_authn_core.so
+LoadModule authz_host_module modules/mod_authz_host.so
+LoadModule authz_groupfile_module modules/mod_authz_groupfile.so
+LoadModule authz_user_module modules/mod_authz_user.so
+LoadModule authz_core_module modules/mod_authz_core.so
+LoadModule access_compat_module modules/mod_access_compat.so
+LoadModule auth_basic_module modules/mod_auth_basic.so
+LoadModule reqtimeout_module modules/mod_reqtimeout.so
+LoadModule filter_module modules/mod_filter.so
+LoadModule mime_module modules/mod_mime.so
+LoadModule log_config_module modules/mod_log_config.so
+LoadModule env_module modules/mod_env.so
+LoadModule headers_module modules/mod_headers.so
+LoadModule setenvif_module modules/mod_setenvif.so
+LoadModule version_module modules/mod_version.so
+LoadModule unixd_module modules/mod_unixd.so
+LoadModule status_module modules/mod_status.so
+LoadModule autoindex_module modules/mod_autoindex.so
+LoadModule dir_module modules/mod_dir.so
+LoadModule alias_module modules/mod_alias.so
+
+User appuser
+Group appgroup
+
+DirectoryIndex index.html
+
+<Directory />
+    AllowOverride none
+    Require all denied
+</Directory>
+
+DocumentRoot "/usr/local/apache2/htdocs"
+<Directory "/usr/local/apache2/htdocs">
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+</Directory>
+
+<IfModule dir_module>
+    DirectoryIndex index.html
+</IfModule>
+
+ErrorLog /proc/self/fd/2
+LogLevel warn
+
+<IfModule log_config_module>
+    LogFormat "%h %l %u %t \"%r\" %>s %b" common
+    CustomLog /proc/self/fd/1 common
+</IfModule>
+
+<IfModule mime_module>
+    TypesConfig conf/mime.types
+    AddType application/x-compress .Z
+    AddType application/x-gzip .gz .tgz
+</IfModule>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: be
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: be
+  template:
+    metadata:
+      labels:
+        app: be
+    spec:
+      containers:
+      - name: be
+        image: ecommerce-be:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SPRING_CONFIG_LOCATION
+          value: "file:/app/config/application.properties"
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://db:3306/ecommerce
+        - name: SPRING_DATASOURCE_USERNAME
+          value: ecommerce_user
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: ecommerce_password
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+      volumes:
+      - name: config-volume
+        configMap:
+          name: be-config-cm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: be
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: be
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - mysql-pvc.yaml
+  - mysql.yaml
+  - be.yaml
+  - fe.yaml
+
+configMapGenerator:
+  - name: db-init-cm
+    files:
+      - init.sql=../../db/init.sql
+  - name: be-config-cm
+    files:
+      - application.properties=../../be/src/main/resources/application.properties
+  - name: fe-config-cm
+    files:
+      - httpd.conf=httpd.conf
+  - name: fe-static-cm
+    files:
+      - index.html=../../fe/src/index.html
+      - app.js=../../fe/src/app.js
+      - style.css=../../fe/src/style.css
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: rootpassword
+        - name: MYSQL_DATABASE
+          value: ecommerce
+        - name: MYSQL_USER
+          value: ecommerce_user
+        - name: MYSQL_PASSWORD
+          value: ecommerce_password
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: db-init-volume
+          mountPath: /docker-entrypoint-initdb.d/init.sql
+          subPath: init.sql
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+      - name: db-init-volume
+        configMap:
+          name: db-init-cm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: db
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fe
+  template:
+    metadata:
+      labels:
+        app: fe
+    spec:
+      containers:
+      - name: fe
+        image: ecommerce-fe:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: apache-config
+          mountPath: /usr/local/apache2/conf/httpd.conf
+          subPath: httpd.conf
+        - name: static-files
+          mountPath: /usr/local/apache2/htdocs
+      volumes:
+      - name: apache-config
+        configMap:
+          name: fe-config-cm
+      - name: static-files
+        configMap:
+          name: fe-static-cm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fe
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30007
+  selector:
+    app: fe
+cat: ./fe: Is a directory
+# File: Dockerfile
+# Purpose: Apache server to serve static frontend files.
+# Dependencies: Apache 2.4-alpine
+# Created: 2026-03-28
+
+FROM httpd:2.4-alpine
+
+# Create a non-root user (per security_rules.md)
+# Apache alpine image runs as root by default, we need to adjust permissions.
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy static files to the Apache htdocs directory
+COPY ./src/ /usr/local/apache2/htdocs/
+
+# Fix permissions
+RUN chown -R appuser:appgroup /usr/local/apache2/htdocs/
+
+# Note: Apache usually needs root to bind to port 80.
+# For simplicity in this demo, we keep it as is or use a higher port.
+# Let's use port 8080 to run as non-root.
+RUN sed -i 's/Listen 80/Listen 8080/g' /usr/local/apache2/conf/httpd.conf
+RUN sed -i 's/User daemon/User appuser/g' /usr/local/apache2/conf/httpd.conf
+RUN sed -i 's/Group daemon/Group appgroup/g' /usr/local/apache2/conf/httpd.conf
+
+# Adjust directory permissions for logs and run files
+RUN mkdir -p /usr/local/apache2/logs && chown -R appuser:appgroup /usr/local/apache2/logs
+
+EXPOSE 8080
+
+USER appuser
+cat: ./fe/src: Is a directory
+<!-- File: index.html -->
+<!-- Purpose: Home page of the ecommerce application. -->
+<!-- Dependencies: app.js, style.css -->
+<!-- Created: 2026-03-28 -->
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Ecommerce</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Minimal Ecommerce</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <span id="user-info">
+                <a href="login.html">Login</a>
+                <a href="register.html">Registrati</a>
+            </span>
+            <a href="cart.html">Carrello (<span id="cart-count">0</span>)</a>
+            <a href="admin.html" id="admin-link" style="display:none;">Admin</a>
+        </nav>
+    </header>
+
+    <main id="product-list">
+        <!-- I prodotti verranno caricati via JS -->
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
+<!-- File: admin.html -->
+<!-- Purpose: Admin area to list users and orders. -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Minimal Ecommerce</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Area Admin</h1>
+        <nav><a href="index.html">Home</a></nav>
+    </header>
+    <main>
+        <section>
+            <h2>Lista Utenti</h2>
+            <div id="users-list">Caricamento...</div>
+        </section>
+        <section style="margin-top: 2rem;">
+            <h2>Lista Ordini</h2>
+            <div id="orders-list">Caricamento...</div>
+        </section>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUsers();
+            fetchOrders();
+        });
+
+        function fetchUsers() {
+            fetch('/api/admin/users')
+                .then(res => res.json())
+                .then(users => {
+                    document.getElementById('users-list').innerHTML = `<ul>${users.map(u => `<li>${u.username} (${u.role})</li>`).join('')}</ul>`;
+                })
+                .catch(err => {
+                    document.getElementById('users-list').innerHTML = '<p>Accesso negato o errore nel caricamento.</p>';
+                });
+        }
+
+        function fetchOrders() {
+            fetch('/api/admin/orders')
+                .then(res => res.json())
+                .then(orders => {
+                    document.getElementById('orders-list').innerHTML = `<ul>${orders.map(o => `<li>ID: ${o.id}, Utente: ${o.user.username}, Totale: €${o.totalAmount}</li>`).join('')}</ul>`;
+                })
+                .catch(err => {
+                    document.getElementById('orders-list').innerHTML = '<p>Accesso negato o errore nel caricamento.</p>';
+                });
+        }
+    </script>
+</body>
+</html>
+<!-- File: register.html -->
+<!-- Purpose: User registration page. -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrati - Minimal Ecommerce</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Registrazione</h1>
+        <nav><a href="index.html">Torna alla Home</a></nav>
+    </header>
+    <main>
+        <div class="form-container">
+            <div id="register-form">
+                <input type="text" id="reg-username" placeholder="Username" required>
+                <input type="password" id="reg-password" placeholder="Password" required>
+                <button onclick="performRegister()">Registrati</button>
+            </div>
+            <p id="reg-message"></p>
+            <p>Hai già un account? <a href="login.html">Accedi</a></p>
+        </div>
+    </main>
+    <script>
+        function performRegister() {
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => {
+                if(res.ok) {
+                    document.getElementById('reg-message').innerText = 'Registrazione completata! Verrai reindirizzato al login...';
+                    setTimeout(() => window.location.href = 'login.html', 2000);
+                } else {
+                    return res.text().then(text => { throw new Error(text) });
+                }
+            })
+            .catch(err => {
+                document.getElementById('reg-message').innerText = 'Errore: ' + err.message;
+            });
+        }
+    </script>
+</body>
+</html>
+<!-- File: login.html -->
+<!-- Purpose: Login page for the ecommerce application. -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Minimal Ecommerce</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Login</h1>
+        <nav><a href="index.html">Torna alla Home</a></nav>
+    </header>
+    <main>
+        <div class="form-container">
+            <form action="/api/auth/login" method="POST">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <p>Non hai un account? <a href="register.html">Registrati</a></p>
+        </div>
+    </main>
+</body>
+</html>
+/* File: style.css */
+/* Purpose: Basic styling for the ecommerce application. */
+/* Created: 2026-03-28 */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+header {
+    background: #333;
+    color: #fff;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header nav a {
+    color: #fff;
+    margin-left: 1rem;
+    text-decoration: none;
+}
+
+main {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.product-card {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.product-card img {
+    max-width: 100%;
+}
+
+button {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background: #218838;
+}
+
+.form-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.form-container input {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+}
+<!-- File: cart.html -->
+<!-- Purpose: Cart management and order confirmation. -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Carrello - Minimal Ecommerce</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Il tuo Carrello</h1>
+        <nav><a href="index.html">Continua lo shopping</a></nav>
+    </header>
+    <main>
+        <div id="cart-items">
+            <!-- Caricato via JS -->
+        </div>
+        <div id="cart-actions" style="margin-top: 2rem;">
+            <button onclick="confirmOrder()">Conferma Ordine</button>
+            <button onclick="clearCart()" style="background: #dc3545;">Svuota Carrello</button>
+        </div>
+        <p id="order-message"></p>
+    </main>
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCart();
+        });
+
+        function renderCart() {
+            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+            const container = document.getElementById('cart-items');
+
+            if (cartItems.length === 0) {
+                container.innerHTML = '<p>Il carrello è vuoto.</p>';
+                document.getElementById('cart-actions').style.display = 'none';
+                return;
+            }
+
+            // In un'app reale dovremmo fare fetch dei dettagli prodotti.
+            // Per ora mostriamo solo gli ID per semplicità.
+            container.innerHTML = `<ul>${cartItems.map(id => `<li>Prodotto ID: ${id}</li>`).join('')}</ul>`;
+        }
+
+        function clearCart() {
+            localStorage.removeItem('cart');
+            window.location.reload();
+        }
+
+        function confirmOrder() {
+            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+            const orderPayload = cartItems.map(id => ({ productId: id, quantity: 1 }));
+
+            fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderPayload)
+            })
+            .then(res => {
+                if (res.ok) {
+                    document.getElementById('order-message').innerText = 'Ordine confermato con successo!';
+                    localStorage.removeItem('cart');
+                    setTimeout(() => window.location.href = 'index.html', 2000);
+                } else if (res.status === 401) {
+                    document.getElementById('order-message').innerText = 'Devi essere loggato per confermare l\'ordine.';
+                    setTimeout(() => window.location.href = 'login.html', 2000);
+                } else {
+                    document.getElementById('order-message').innerText = 'Errore nella conferma dell\'ordine.';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+// File: app.js
+// Purpose: Main logic for the frontend application.
+// Dependencies: index.html, style.css
+// Created: 2026-03-28
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchProducts();
+    updateCartCount();
+    checkLoginStatus();
+});
+
+const API_BASE_URL = '/api';
+
+function fetchProducts() {
+    const productList = document.getElementById('product-list');
+    if (!productList) return;
+
+    fetch(`${API_BASE_URL}/products`)
+        .then(response => response.json())
+        .then(products => {
+            productList.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <img src="${product.imageUrl}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p>€${product.price}</p>
+                    <button onclick="addToCart(${product.id})">Aggiungi al Carrello</button>
+                </div>
+            `).join('');
+        })
+        .catch(err => {
+            console.error('Errore nel caricamento prodotti:', err);
+            productList.innerHTML = '<p>Errore nel caricamento dei prodotti. Assicurati che il backend sia attivo.</p>';
+        });
+}
+
+function addToCart(productId) {
+    // Implementazione carrello
+    console.log('Aggiunto al carrello:', productId);
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    cart.push(productId);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartCount();
+}
+
+function updateCartCount() {
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        cartCount.textContent = cart.length;
+    }
+}
+
+function checkLoginStatus() {
+    // Verifica se l'utente è loggato tramite cookie
+    fetch(`${API_BASE_URL}/auth/me`)
+        .then(response => {
+            if (response.ok) return response.json();
+            throw new Error('Non loggato');
+        })
+        .then(user => {
+            const userInfo = document.getElementById('user-info');
+            userInfo.innerHTML = `<span>Ciao, ${user.username}</span> | <a href="#" onclick="logout()">Logout</a> | <a href="#" onclick="showHistory()">I miei ordini</a>`;
+            if (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN') {
+                document.getElementById('admin-link').style.display = 'inline';
+            }
+        })
+        .catch(() => {
+            // Non loggato
+        });
+}
+
+function showHistory() {
+    fetch(`${API_BASE_URL}/orders/history`)
+        .then(res => res.json())
+        .then(orders => {
+            alert('Storico Ordini:\n' + orders.map(o => `ID: ${o.id}, Totale: €${o.totalAmount}, Stato: ${o.status}`).join('\n'));
+        });
+}
+
+function logout() {
+    fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' })
+        .then(() => {
+            window.location.reload();
+        });
+}
+{
+  "_comment": "AAOF Deployed State — written by the agent at STEP 7. Represents the last successful deployment.",
+  "project_name": "my-project",
+  "deployed_at": "2024-01-15T10:30:00Z",
+  "deployed_by": "aaof-agent",
+  "version": "1.0.0",
+  "deploy_target": "DOCKER",
+  "services": [
+    {
+      "name": "api",
+      "image": "my-project-api:1.0.0",
+      "port": 3000,
+      "status": "running"
+    },
+    {
+      "name": "db",
+      "image": "postgresql:16",
+      "port": 5432,
+      "status": "running"
+    }
+  ],
+  "confirmed_versions": {
+    "node": "20",
+    "postgresql": "16"
+  },
+  "validation_result": "PASS",
+  "changelog_entry": "2024-01-15: Initial deployment of my-project v1.0.0"
+}
+{
+  "project_name": "ecommerce-3-layer",
+  "version": "0.1.0",
+  "stack": {
+    "frontend": "Apache 2.4-alpine, Vanilla JS",
+    "backend": "Spring Boot 3.3.0, Java 21",
+    "database": "MySQL 8.0"
+  },
+  "deployment": {
+    "docker_compose": "Ready",
+    "kubernetes": "Kustomize manifests ready for Minikube",
+    "ports": {
+      "fe": 80,
+      "be": 8080,
+      "db": 3306
+    }
+  },
+  "security": {
+    "auth": "Cookie-based session",
+    "roles": ["USER", "ADMIN"],
+    "non_root_containers": true
+  },
+  "k8s_features": {
+    "configmaps": ["fe-config-cm", "fe-static-cm", "be-config-cm", "db-init-cm"],
+    "pvc": ["mysql-pvc"]
+  }
+}
+cat: ./db: Is a directory
+-- File: init.sql
+-- Purpose: Initialize the database schema for the ecommerce application.
+-- Dependencies: MySQL 8.0
+-- Created: 2026-03-28
+
+CREATE DATABASE IF NOT EXISTS ecommerce;
+USE ecommerce;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Products table
+CREATE TABLE IF NOT EXISTS products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    image_url VARCHAR(255)
+);
+
+-- Orders table
+CREATE TABLE IF NOT EXISTS orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    total_amount DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Order items table
+CREATE TABLE IF NOT EXISTS order_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+-- Insert sample products
+INSERT INTO products (name, description, price, image_url) VALUES
+('Oggetto 1', 'Descrizione oggetto 1', 10.00, 'https://via.placeholder.com/150'),
+('Oggetto 2', 'Descrizione oggetto 2', 20.00, 'https://via.placeholder.com/150'),
+('Oggetto 3', 'Descrizione oggetto 3', 30.00, 'https://via.placeholder.com/150');
+
+-- Insert admin user (password: admin123)
+-- In a real app, this would be hashed. For this test environment, we use simple strings for now to test injection later.
+INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'ADMIN');
+# File: docker-compose.yml
+# Purpose: Define the services for the 3-layer ecommerce application.
+# Dependencies: MySQL, Apache, Java
+# Created: 2026-03-28
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ecommerce}
+      MYSQL_USER: ${MYSQL_USER:-ecommerce_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ecommerce_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  be:
+    build:
+      context: ./be
+      dockerfile: Dockerfile
+    container_name: java_be
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ecommerce_user
+      SPRING_DATASOURCE_PASSWORD: ecommerce_password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  fe:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    container_name: apache_fe
+    ports:
+      - "${FE_PORT:-80}:8080"
+    networks:
+      - frontend
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  mysql_data:
+# Database Configuration
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=ecommerce
+MYSQL_USER=ecommerce_user
+MYSQL_PASSWORD=ecommerce_password
+
+# Backend Configuration
+DB_HOST=db
+DB_PORT=3306
+SERVER_PORT=8080
+
+# Frontend Configuration
+FE_PORT=80
+BE_API_URL=http://localhost:8080/api
+# Test Playbook — Minimal Ecommerce
+
+Questo documento descrive i test per validare l'applicazione 3-layer.
+
+## Prerequisiti
+- Docker e Docker Compose installati.
+- Porte 80 e 3306 libere (o configurate in `.env`).
+
+## Catalogo Test
+
+### 1. Health Check
+- **ID:** T1
+- **Azione:** `curl -f http://localhost:8080/actuator/health`
+- **Risultato Atteso:** HTTP 200, JSON con `status: UP`.
+
+### 2. Registrazione Utente
+- **ID:** T2
+- **Azione:** POST a `/api/auth/register` con JSON `{ "username": "testuser", "password": "password123" }`.
+- **Risultato Atteso:** HTTP 201.
+
+### 3. Login e Sessione Cookie
+- **ID:** T3
+- **Azione:** POST a `/api/auth/login` con form-data `username=testuser&password=password123`.
+- **Risultato Atteso:** HTTP 302 (Redirect a index.html) e impostazione cookie `JSESSIONID`.
+
+### 4. Lista Prodotti (Anonimo)
+- **ID:** T4
+- **Azione:** GET `/api/products`
+- **Risultato Atteso:** HTTP 200, array con 3 prodotti.
+
+### 5. Conferma Carrello (Richiede Login)
+- **ID:** T5
+- **Azione:** POST `/api/orders` con JSON `[{ "productId": 1, "quantity": 1 }]` includendo il cookie di sessione.
+- **Risultato Atteso:** HTTP 200, dettaglio dell'ordine creato.
+
+### 6. Area Admin (Accesso Negato a Utente standard)
+- **ID:** T6
+- **Azione:** GET `/api/admin/users` con cookie di `testuser`.
+- **Risultato Atteso:** HTTP 403 Forbidden.
+
+### 7. Area Admin (Accesso Consentito ad Admin)
+- **ID:** T7
+- **Azione:** GET `/api/admin/users` con credenziali `admin`/`admin123`.
+- **Risultato Atteso:** HTTP 200, lista utenti.
+
+## Esecuzione Automatizzata
+Eseguire `mvn test` all'interno del container `be` per i test di integrazione Java.
+➜  output
