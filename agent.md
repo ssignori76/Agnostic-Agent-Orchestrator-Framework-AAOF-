@@ -158,6 +158,9 @@ If the agent determines that the fix requires modifying files NOT covered by the
 - Update `VAR_SESSION_STEP` to `2` in `session_state.json`.
 - Present an action plan reading confirmed variables from the session file.
   Follow the quality standards defined in `rules/design_review_rules.md`.
+  The plan MUST include at least 2 architectural or technological alternatives with
+  trade-offs as required by `rules/design_review_rules.md`. If only one approach is
+  viable, explicitly document WHY alternatives were excluded.
 - **K8s Externalization Analysis (if `deploy_targets` includes Kubernetes AND `VAR_MINIKUBE_APPROVED` is `true`):**
   Follow the "Nothing Hardcoded Inside" principle from `rules/kubernetes_rules.md` §10:
   1. Analyze the project source code and identify ALL files that contain configuration.
@@ -197,6 +200,13 @@ If the agent determines that the fix requires modifying files NOT covered by the
   - List of all environment variables defined in `.env`, compose, and K8s manifests
 - **Backup Completeness Check:** Verify the backup folder contains ALL files listed in
   the manifest before proceeding to STEP 4.
+- **SCRATCH Project Baseline:** If `VAR_PROJECT_MODE` is `SCRATCH` and `output/` contains
+  no source files (check before any STEP 4 work begins), generate a `backup_manifest.json`
+  with empty arrays:
+  `{"files": [], "methods": [], "volumes": [], "k8s_resources": [], "ports": [], "env_vars": []}`.
+  Record `VAR_ACTIVE_BACKUP_PATH` normally. This establishes the baseline for non-regression
+  checks — any file present in `output/` after STEP 4 that is NOT in the manifest is new
+  (expected), while the empty baseline ensures no removal checks trigger false positives.
 
 ### STEP 4: Implementation
 
@@ -253,8 +263,24 @@ If the agent determines that the fix requires modifying files NOT covered by the
    - Execute all tests defined in the playbook.
    - Generate `output/test_results.md` with full results.
    - If any test fails → go to STEP 6.
+5.4.1. **Kubernetes Validation (if `VAR_DEPLOY_TARGET` includes `K8S`):**
+   After Docker validation passes (5.1–5.4), apply K8s manifests to Minikube and run
+   a second validation cycle:
+   - `kubectl apply -k` or `kubectl apply -f` on all manifests
+   - Verify pods reach `Running` state
+   - Health check K8s services (port-forward or NodePort)
+   - Run functional tests against K8s endpoints
+   Both Docker AND K8s validation must PASS for `VAR_VALIDATION_RESULT` = `PASS`.
+   If Minikube is not available (`VAR_MINIKUBE_APPROVED` is `false`), skip this
+   sub-step and log a WARN. `VAR_VALIDATION_RESULT` is still set based on Docker
+   validation results alone; the WARN is recorded in `session_state.json` as a note
+   that K8s validation was not performed.
 5.5. **Report:** Write result in `session_state.json`:
    - `VAR_VALIDATION_RESULT`: `PASS` or `FAIL`.
+   - **MANDATORY:** `VAR_VALIDATION_RESULT` MUST be set ONLY after the agent has directly
+     observed test results from executed commands (STEP 5.1–5.4). Setting `PASS` based on
+     "the code looks correct", user confirmation, or unexecuted tests is a violation of
+     the Evidence Over Claims golden rule (§5).
 5.6. If `PASS` → proceed to STEP 7. If `FAIL` → go to STEP 6.
 
 ### STEP 6: Rollback Gate
