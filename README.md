@@ -87,12 +87,16 @@ STEP 0 to STEP 4 is as impossible as jumping from floor 0 to floor 4 in an eleva
 │   ├─ Reads/Writes session/step_evidence.json  (gate audit log)      │
 │   └─ Writes output/  (generated code and deployment files)          │
 │                                                                     │
-│  Step Gate Machine (enforced by workflow_gates.md + agent.md §4.2)  │
+│  Step Gate Machine                                                   │
+│   ├─ RULES: rules/workflow_gates.md  (pre/postconditions per step)  │
+│   ├─ PROTOCOL: agent.md §4.2        (how the agent enforces gates)  │
 │   ├─ Every step has PRECONDITIONS — entry is blocked if not met     │
 │   ├─ Every step has POSTCONDITIONS — advance is blocked if not met  │
 │   └─ All gate checks are logged in session/step_evidence.json       │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+> **How does the Step Gate Machine work?** The gate conditions for each step (PRE-0.1, POST-0.1, etc.) are defined in [`rules/workflow_gates.md`](rules/workflow_gates.md). The enforcement protocol — *how* the agent checks those conditions at every transition — is defined in [`agent.md` §4.2](agent.md). To add or modify gate conditions, edit `workflow_gates.md`. See [Customizing the Rules](#-customizing-the-rules) below.
 
 ---
 
@@ -456,6 +460,60 @@ The 8 golden rules that govern every agent action:
 | **Test-First** | No production code without a failing test first — TDD is the Iron Law. |
 | **Evidence Over Claims** | `VAR_VALIDATION_RESULT` = PASS only after the agent has directly observed test results from executed commands. |
 | **Nothing Hardcoded Inside** | Every config that may vary between environments must be externalized as ConfigMap, Secret, or environment variable. |
+
+---
+
+## 🔧 Customizing the Rules
+
+The `rules/` files are **policy documents, not code**. The AI agent loads them at STEP 0
+and treats them as binding operational directives. You can edit any `rules/*.md` file to
+change the agent's behavior — no code changes required.
+
+### How to add or modify step gate conditions
+
+Edit [`rules/workflow_gates.md`](rules/workflow_gates.md) and add rows to the
+Preconditions or Postconditions tables for the relevant step. Each condition needs:
+- An ID (e.g., `PRE-4.4`)
+- A description of what must be true
+- A "How to verify" instruction the agent can follow
+
+### How to add a new compliance check
+
+Add an entry to [`rules/output_checklist.json`](rules/output_checklist.json) with:
+- An ID (e.g., `SEC-006`)
+- A `category` and `rule` description
+- A `how_to_verify` instruction
+- A `severity_by_profile` object specifying `lab`, `staging`, and `production` severities
+
+### How to change the security profile behavior
+
+Edit [`rules/security_profiles.md`](rules/security_profiles.md) to change what is WARN
+vs FAIL for each environment tier. To switch your project's active profile, update
+`config.json` → `environment_context.type` to `lab`, `staging`, or `production`.
+
+### How to create a completely new rule file
+
+Create a new file in the `rules/` directory (e.g., `rules/my_custom_rules.md`). The agent
+automatically loads **all `rules/*.md` files at STEP 0** (see `agent.md` STEP 0, point 4).
+Use clear imperative language ("The agent MUST…") so the AI treats it as a binding directive.
+
+### What NOT to modify (or modify with caution)
+
+[`agent.md`](agent.md) is the **core operational protocol** — changing it alters the
+fundamental 8-step workflow. Modify it only if you fully understand the step lifecycle and
+gate validation protocol (§4.2). The `session/` and `backups/` directories are
+auto-managed and should not be edited manually.
+
+### Quick Reference
+
+| Goal | File to edit | Notes |
+|------|-------------|-------|
+| Add/change step gate conditions | `rules/workflow_gates.md` | Add rows to PRE/POST tables |
+| Add a compliance check | `rules/output_checklist.json` | Include `severity_by_profile` |
+| Adjust security enforcement | `rules/security_profiles.md` | Changes WARN/FAIL thresholds |
+| Add technology-specific rules | `rules/new_file.md` | Auto-loaded at STEP 0 |
+| Change deployment environment | `config.json` | Set `environment_context.type` |
+| Modify core workflow | `agent.md` | ⚠️ Advanced — affects all steps |
 
 ---
 
