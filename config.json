@@ -1,0 +1,44 @@
+{
+  "_comment": "AAOF Project Configuration — fill in the values for your project.",
+  "_schema": "See docs/config.schema.md for full field documentation.",
+
+  "project_name": "my-project",
+  "project_description": "A brief description of what this project does.",
+
+  "stack": {
+    "languages": ["javascript"],
+    "frameworks": ["express"],
+    "databases": ["postgresql"],
+    "cache": [],
+    "message_queue": []
+  },
+
+  "deploy_targets": ["DOCKER"],
+
+  "services": [
+    {
+      "name": "api",
+      "type": "web",
+      "port": 3000,
+      "description": "Main REST API service"
+    },
+    {
+      "name": "db",
+      "type": "database",
+      "engine": "postgresql",
+      "version": "16",
+      "description": "Primary database"
+    }
+  ],
+
+  "environment": {
+    "development": {
+      "log_level": "debug",
+      "hot_reload": true
+    },
+    "production": {
+      "log_level": "info",
+      "hot_reload": false
+    }
+  }
+}

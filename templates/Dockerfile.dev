@@ -1,0 +1,34 @@
+# Dockerfile.dev — Development Container Template
+#
+# Purpose: Development environment with all SDKs, runtimes, and build tools.
+#          Source code is mounted as a volume — NOT copied into this image.
+# Usage:   Used via docker-compose.dev.yml. Not for production use.
+
+# Replace with the appropriate SDK image for your project's language/framework
+ARG NODE_VERSION=20
+FROM node:${NODE_VERSION}-alpine
+
+# Install common development tools
+RUN apk add --no-cache \
+    bash \
+    curl \
+    git \
+    make \
+    vim
+
+WORKDIR /app
+
+# Install dependencies first (layer caching optimization)
+# Replace with your package manager's dependency files
+COPY package*.json ./
+RUN npm install
+
+# The source code is mounted as a volume at runtime — not copied here
+# See docker-compose.dev.yml for the volume configuration
+
+# Expose the development port (adjust as needed)
+EXPOSE 3000
+
+# Start command with hot-reload support
+# Replace with your framework's hot-reload command
+CMD ["npm", "run", "dev"]

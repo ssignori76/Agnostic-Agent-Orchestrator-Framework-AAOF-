@@ -1,0 +1,94 @@
+# .gitignore — AAOF Project
+#
+# Ignores runtime state, secrets, generated output, and OS/editor artifacts.
+
+# ─── AAOF Runtime State ───────────────────────────────────────────────────
+# Session state is auto-managed by the agent — not committed
+session/session_state.json
+
+# Backup directory contents (large, can be regenerated)
+backups/*
+!backups/.gitkeep
+
+# Generated output (keep example files but ignore real generated content)
+output/*
+!output/.gitkeep
+!output/*.example
+
+# ─── Secrets and Environment ──────────────────────────────────────────────
+# Never commit actual environment files
+.env
+.env.*
+!.env.example
+
+# ─── Docker ───────────────────────────────────────────────────────────────
+# Docker-generated files
+*.dockerignore
+
+# ─── OS Files ─────────────────────────────────────────────────────────────
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ─── Editor and IDE Files ─────────────────────────────────────────────────
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*.swn
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+
+# ─── Build Artifacts ──────────────────────────────────────────────────────
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Java
+*.class
+*.jar
+*.war
+target/
+
+# Go
+vendor/
+
+# ─── Logs ─────────────────────────────────────────────────────────────────
+*.log
+logs/

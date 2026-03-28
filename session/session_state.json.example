@@ -1,0 +1,14 @@
+{
+  "_comment": "AAOF Session State — managed automatically by the agent. Do not edit manually.",
+  "VAR_SOURCE_OF_TRUTH": "CONFIG_JSON",
+  "VAR_CONFIRMED_VERSIONS": {
+    "node": "20",
+    "postgresql": "16"
+  },
+  "VAR_DEPLOY_TARGET": ["DOCKER"],
+  "VAR_PROJECT_MODE": "SCRATCH",
+  "VAR_SESSION_STEP": 0,
+  "VAR_AVAILABLE_MCP": ["filesystem", "git"],
+  "VAR_VALIDATION_RESULT": null,
+  "VAR_RETRY_COUNT": 0
+}

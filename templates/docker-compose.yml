@@ -1,0 +1,79 @@
+# docker-compose.yml — Production/Staging Compose Template
+#
+# Purpose: Defines the full application stack for production or staging deployment.
+#          All services run as containers. No bind mounts for source code.
+# Usage:   docker-compose up -d
+#
+# Environment: Set variables in .env (copy from .env.example)
+
+services:
+
+  # ─── API Service ──────────────────────────────────────────────────────────
+  api:
+    image: ${PROJECT_NAME}-api:${APP_VERSION:-latest}
+    container_name: ${PROJECT_NAME}-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - frontend
+      - backend
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.10"
+          memory: 64M
+
+  # ─── Database Service ─────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: ${PROJECT_NAME}-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    networks:
+      - backend
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+# ─── Named Volumes ────────────────────────────────────────────────────────
+volumes:
+  db-data:
+    name: ${PROJECT_NAME}-db-data
+
+# ─── Networks ─────────────────────────────────────────────────────────────
+networks:
+  frontend:
+    name: ${PROJECT_NAME}-frontend
+  backend:
+    name: ${PROJECT_NAME}-backend
+    internal: true   # Backend network is not accessible from outside
