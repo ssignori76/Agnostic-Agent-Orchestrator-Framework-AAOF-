@@ -58,6 +58,7 @@ explicitly read from or write to the JSON file**. Do not rely on chat history al
 | `VAR_MINIKUBE_INSTALLED` | Boolean | `true` if Minikube is installed and functional |
 | `VAR_MINIKUBE_APPROVED`  | Boolean | `true` if the user has authorized Minikube installation/usage. Persists across sessions |
 | `VAR_K8S_EXTERNALIZATION_MAP` | Object | Map of externalized configurations (ConfigMaps, Secrets, env vars) approved by the user at STEP 2 |
+| `VAR_SECURITY_PROFILE`   | String  | Active security profile: `lab`, `staging`, or `production` (set at STEP 1) |
 
 ---
 
@@ -99,6 +100,28 @@ If the agent determines that the fix requires modifying files NOT covered by the
 
 ---
 
+### 4.2 Step Gate Validation Protocol (MANDATORY)
+
+Every step transition is governed by the gates defined in `rules/workflow_gates.md`.
+
+**Before entering ANY step N, the agent MUST:**
+1. READ `session_state.json` and verify `VAR_SESSION_STEP` equals the expected previous value
+2. VERIFY all preconditions for STEP N from `rules/workflow_gates.md`
+3. If ANY precondition fails: STOP, inform user, do NOT enter the step
+
+**Before advancing from STEP N to STEP N+1, the agent MUST:**
+1. VERIFY all postconditions for STEP N from `rules/workflow_gates.md`
+2. LOG the result in `session/step_evidence.json`
+3. If ANY postcondition fails: STOP, inform user, do NOT advance
+4. ONLY THEN write the new `VAR_SESSION_STEP` value
+
+**Gate failure message format:**
+> "⛔ Gate check failed for transition STEP N → STEP N+1
+> Failed conditions: [list condition IDs and their descriptions]
+> Please resolve the above conditions before I can proceed."
+
+---
+
 ### STEP 0: Bootstrap & Rules Loading
 
 1. Update `VAR_SESSION_STEP` to `0` in `session_state.json`.
@@ -130,7 +153,7 @@ If the agent determines that the fix requires modifying files NOT covered by the
 
 4. **Read ALL files in `rules/` except `rules/git_rules.md`** and assimilate them as your operational directives.
    These are your libraries — treat them with the same authority as this file.
-   This includes `rules/testing_rules.md`.
+   This includes `rules/testing_rules.md`, `rules/workflow_gates.md`, and `rules/security_profiles.md`.
 5. **Test Baseline Loading:**
    - If `output/test_playbook.md` exists:
      - Read it as the regression test baseline.
@@ -152,6 +175,17 @@ If the agent determines that the fix requires modifying files NOT covered by the
   *"I found an existing release. Use versions from `deployed_state.json` or `config.json`?"*
 - Save the choice in `VAR_SOURCE_OF_TRUTH`.
 - If specific versions are missing, ask the user and update `VAR_CONFIRMED_VERSIONS`.
+- **Environment Classification (MANDATORY):**
+  1. Read `environment_context.type` from `config.json`.
+  2. If not set: ASK the user — *"Is this a `lab/dev`, `staging`, or `production` environment? I cannot proceed without this classification."*
+  3. Load the corresponding security profile from `rules/security_profiles.md`.
+  4. Present to user: *"This project is classified as **[TYPE]**. Security profile loaded:*
+     - *TLS/HTTPS: [implication for this profile]*
+     - *Secrets management: [implication for this profile]*
+     - *Password hashing: [implication for this profile]*
+     - *Network isolation: [implication for this profile]*
+     *Do you confirm?"*
+  5. Wait for user confirmation. Store in `VAR_SECURITY_PROFILE` in `session_state.json` ONLY after user confirms.
 
 ### STEP 2: Execution Plan (Proposal)
 
@@ -250,6 +284,18 @@ If the agent determines that the fix requires modifying files NOT covered by the
     without explicit user approval. If the count has decreased: **STOP** and request explicit
     user approval before proceeding.
   - Log the comparison result in `session_state.json` as `VAR_REGRESSION_CHECK`: `PASS`, `FAIL`, or `WARN`.
+
+**5.0.5. Compliance Check (MANDATORY — after non-regression, before build):**
+  1. Read `rules/output_checklist.json`.
+  2. Read `VAR_SECURITY_PROFILE` from `session_state.json`.
+  3. For each check in the checklist, determine the effective severity using `VAR_SECURITY_PROFILE`
+     (look up `severity_by_profile[VAR_SECURITY_PROFILE]`).
+  4. Execute the verification described in `how_to_verify` for each check.
+  5. Record the result for each check: `PASS`, `WARN`, or `FAIL`.
+  6. Generate `output/compliance_report.md` with a results table:
+     - Include check ID, category, rule description, result, and severity.
+  7. If ANY check returns `FAIL`: **STOP**, present the failures to the user, wait for approval before continuing.
+  8. If checks return only `WARN`: log all warnings, include them in `output/test_results.md`, and continue.
 
 5.1. **Build:** Execute `docker-compose build` or `docker build`.
    - If fails → go to STEP 6.

@@ -1,7 +1,7 @@
 # Agnostic Agent Orchestrator Framework (AAOF)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](changelog.md)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](changelog.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 > **Give any AI agent a structured operating system — and watch it build production-ready
@@ -16,7 +16,12 @@ Gemini, GPT, etc.) into a disciplined, stateful infrastructure engineer.
 
 Instead of typing freeform prompts and hoping for the best, you configure a handful of
 files and let the framework guide the AI through a repeatable, auditable workflow:
-plan → backup → build → validate → deploy.
+bootstrap → plan → backup → implement → validate → consolidate.
+
+AAOF enforces this workflow through a **Step Gate Machine**: every step has programmatic
+entry conditions (preconditions) and exit conditions (postconditions). The agent cannot
+skip steps, cut corners, or advance without meeting all conditions — skipping from
+STEP 0 to STEP 4 is as impossible as jumping from floor 0 to floor 4 in an elevator.
 
 **You don't need to be a programmer.** You just need to describe what you want.
 
@@ -39,6 +44,9 @@ plan → backup → build → validate → deploy.
 | **Stateful Sessions** | JSON-based persistence survives AI context resets |
 | **Container-First** | All development happens inside Docker containers |
 | **Automatic Backups** | Every change is snapshotted before modification |
+| **Step Gate Machine** | Programmatic preconditions and postconditions block every step — no skipping allowed |
+| **Security Profiles** | Three tiered profiles (lab/staging/production) adapt rule enforcement to the environment |
+| **Compliance Checklist** | Automated machine-verifiable checks at STEP 5.0.5 produce a compliance report |
 | **Validation Gate** | Build → Run → Health check before accepting a result |
 | **Rollback Gate** | Structured recovery on failure (retry / rollback / abort) |
 | **MCP-Aware** | Works with any MCP-enabled agent (Claude Code, Gemini CLI…) |
@@ -54,17 +62,54 @@ plan → backup → build → validate → deploy.
 
 ---
 
+## 🏗 Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  User                                                               │
+│   │                                                                 │
+│   ├─ Edits config.json  ──────────────────────────────────────┐    │
+│   ├─ Writes specs/active/  ──────────────────────────────┐    │    │
+│   └─ Types "GO" to approve plans                         │    │    │
+│                                                          │    │    │
+│  AI Agent (Claude / Gemini / GPT)                        │    │    │
+│   │                                                      │    │    │
+│   ├─ Reads agent.md  (primary manual)                    │    │    │
+│   ├─ Reads rules/*.md (policies)                         │    │    │
+│   │   ├─ workflow_gates.md    Step Gate Machine          │    │    │
+│   │   ├─ security_profiles.md env-aware enforcement      │    │    │
+│   │   ├─ output_checklist.json compliance checks         │    │    │
+│   │   └─ (other rules...)                                │    │    │
+│   ├─ Reads specs ────────────────────────────────────────┘    │    │
+│   ├─ Reads config ────────────────────────────────────────────┘    │
+│   │                                                                 │
+│   ├─ Reads/Writes session/session_state.json  (persistence layer)  │
+│   ├─ Reads/Writes session/step_evidence.json  (gate audit log)     │
+│   └─ Writes output/  (generated code and deployment files)         │
+│                                                                     │
+│  Step Gate Machine (enforced by workflow_gates.md + agent.md §4.2) │
+│   ├─ Every step has PRECONDITIONS — entry is blocked if not met     │
+│   ├─ Every step has POSTCONDITIONS — advance is blocked if not met  │
+│   └─ All gate checks are logged in session/step_evidence.json       │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 🏗 Framework Structure
 
 ```
 AAOF/
 ├── agent.md                        ← The AI's operational manual (read this first)
-├── config.json                     ← Your project requirements
+├── config.json                     ← Your project requirements (incl. environment_context)
 ├── GEMINI.md                       ← Gemini CLI auto-loaded instructions
 ├── changelog.md                    ← Chronological activity log
 ├── CONTRIBUTING.md                 ← How to contribute
 │
 ├── rules/                          ← The AI's "libraries" — operational policies
+│   ├── workflow_gates.md           ← Step Gate Machine: pre/postconditions per step
+│   ├── security_profiles.md        ← lab/staging/production enforcement rules
+│   ├── output_checklist.json       ← Machine-verifiable compliance checks (STEP 5.0.5)
 │   ├── development_rules.md        ← Code quality, file size, naming conventions
 │   ├── docker_rules.md             ← Container-first dev, Compose best practices
 │   ├── kubernetes_rules.md         ← Minikube-first, 1 resource per file, Kustomize
@@ -81,10 +126,14 @@ AAOF/
 │   └── history/                    ← Completed specs (archived automatically)
 │
 ├── session/
-│   └── session_state.json          ← Live session state (git-ignored, auto-managed)
+│   ├── session_state.json          ← Live session state (git-ignored, auto-managed)
+│   └── step_evidence.json          ← Gate check audit log (git-ignored, auto-managed)
 │
 ├── output/                         ← Generated code, Dockerfiles, manifests
-│   └── deployed_state.json         ← Technical snapshot of the last deployment
+│   ├── deployed_state.json         ← Technical snapshot of the last deployment
+│   ├── test_playbook.md            ← Test plan (generated at STEP 5)
+│   ├── test_results.md             ← Test execution results (generated at STEP 5)
+│   └── compliance_report.md        ← Compliance check results (generated at STEP 5.0.5)
 │
 ├── backups/                        ← Pre-change snapshots (git-ignored)
 │
@@ -108,19 +157,173 @@ AAOF/
 
 ---
 
-## 🔄 How It Works
+## 🔄 The 8-Step Workflow (with Gate Machine)
 
-The AI agent follows a 7-step workflow defined in `agent.md`:
+The AI agent follows a strictly gated 8-step workflow. Every transition between steps
+requires meeting both the **exit conditions** of the current step and the **entry conditions**
+of the next. The agent will stop and inform you if any gate fails.
+
+### STEP 0 — Bootstrap & Rules Loading
+
+| | |
+|---|---|
+| **What happens** | Docker check; Minikube check (if K8s target); load all `rules/*.md`; load test baseline; inventory MCP servers; load `config.json`; initialize or restore `session_state.json` |
+| **Entry gate** | None (entry point) |
+| **Exit gate** | `VAR_DOCKER_INSTALLED` == true; all rules loaded; `session_state.json` initialized; `VAR_SESSION_STEP` == 0 |
+| **Gate failure** | If Docker is not installed and user refuses installation: **full stop** — Docker is mandatory |
+
+### STEP 1 — Priority Resolution and Versioning
+
+| | |
+|---|---|
+| **What happens** | Resolve version conflicts (deployed state vs config); confirm tech versions; **classify environment** (lab/staging/production); load security profile; confirm profile with user |
+| **Entry gate** | `VAR_SESSION_STEP` == 0; `VAR_DOCKER_INSTALLED` == true; `session_state.json` exists |
+| **Exit gate** | `VAR_SOURCE_OF_TRUTH` set; `VAR_CONFIRMED_VERSIONS` non-empty; `VAR_SECURITY_PROFILE` set and confirmed by user; `config.json` reflects actual stack |
+| **Gate failure** | If environment type is unknown: agent **asks the user** and cannot proceed without a confirmed profile |
+
+### STEP 2 — Execution Plan (Proposal)
+
+| | |
+|---|---|
+| **What happens** | Present architectural alternatives (≥2 options with trade-offs); K8s externalization analysis if applicable; wait for user "GO" |
+| **Entry gate** | `VAR_SESSION_STEP` == 1; `VAR_CONFIRMED_VERSIONS` non-empty; `specs/active/` contains ≥1 file |
+| **Exit gate** | Plan presented with ≥2 alternatives; user explicit "GO" received; `VAR_SESSION_STEP` == 2 |
+| **Gate failure** | Agent will not start implementation without an explicit "GO" from the user |
+
+### STEP 3 — Backup Protocol
+
+| | |
+|---|---|
+| **What happens** | Create timestamped backup in `backups/`; generate `backup_manifest.json` with file hashes, methods, volumes, ports, env vars; verify backup completeness |
+| **Entry gate** | `VAR_SESSION_STEP` == 2; user "GO" was received at STEP 2 |
+| **Exit gate** | `VAR_ACTIVE_BACKUP_PATH` set; `backup_manifest.json` exists; backup completeness verified |
+| **Gate failure** | Agent will not touch `output/` until backup is confirmed complete |
+
+### STEP 4 — Implementation
+
+| | |
+|---|---|
+| **What happens** | Write code inside Docker containers following all `rules/`; TDD mandatory (RED-GREEN-REFACTOR); Git branch if enabled; K8s externalization if applicable |
+| **Entry gate** | `VAR_SESSION_STEP` == 3; `VAR_ACTIVE_BACKUP_PATH` set; `backup_manifest.json` exists |
+| **Exit gate** | Source files exist in `output/`; TDD evidence recorded (or user-approved exception); all code follows `rules/development_rules.md` |
+| **Gate failure** | No production code without a failing test first — TDD is the Iron Law |
+
+### STEP 5 — Validation & Test
+
+| | |
+|---|---|
+| **What happens** | **5.0** Non-regression check; **5.0.5** Compliance check (`output_checklist.json`); **5.1** Build; **5.2** Run; **5.3** Health check; **5.4** Functional tests; **5.5** Set `VAR_VALIDATION_RESULT` |
+| **Entry gate** | `VAR_SESSION_STEP` == 4; source files in `output/`; `backup_manifest.json` available |
+| **Exit gate** | `VAR_VALIDATION_RESULT` set (PASS/FAIL); `test_playbook.md`, `test_results.md`, `compliance_report.md` all exist; `VAR_REGRESSION_CHECK` set |
+| **Gate failure** | Any FAIL in compliance checks → agent stops and presents failures; any test failure → go to STEP 6 |
+
+### STEP 6 — Rollback Gate *(entered only when STEP 5 fails)*
+
+| | |
+|---|---|
+| **What happens** | Debug investigation; present user options: Retry / Retry Extended / Rollback / Abort |
+| **Entry gate** | `VAR_VALIDATION_RESULT` == FAIL |
+| **Exit gate** | User decision recorded in `session_state.json` |
+| **Gate failure** | STEP 6 cannot be entered if validation passed — it is a FAIL-only path |
+
+### STEP 7 — Consolidation, State Backup, and Cleanup
+
+| | |
+|---|---|
+| **What happens** | Update `deployed_state.json`; session backup; archive `specs/active/`; cleanup `session/`; update `changelog.md`; K8s deploy if applicable; Git release tag if enabled |
+| **Entry gate** | `VAR_VALIDATION_RESULT` == PASS; `VAR_REGRESSION_CHECK` != FAIL |
+| **Exit gate** | `deployed_state.json` updated; `specs/active/` archived; `changelog.md` updated |
+| **Gate failure** | Agent will not consolidate a failed session |
+
+---
+
+## 🔐 Security Profiles
+
+Security enforcement adapts to the deployment environment. The active profile is set in
+`config.json` under `environment_context.type` and stored in `VAR_SECURITY_PROFILE`.
+
+### Profile Selection
+
+```json
+"environment_context": {
+  "type": "lab",
+  "tls_required": false,
+  "external_access": false,
+  "secrets_strictness": "relaxed"
+}
+```
+
+Valid values: `lab`, `staging`, `production`.
+
+If not set, the agent **must ask the user** before proceeding past STEP 1.
+
+### Enforcement Table
+
+| Rule | Lab/Dev | Staging | Production |
+|------|---------|---------|------------|
+| TLS/HTTPS | ⬜ Optional (document choice) | ✅ Required (self-signed OK) | ✅ Required (CA-signed) |
+| Secrets in docker-compose.yml | ⚠️ WARN | ❌ FAIL | ❌ FAIL |
+| DB port exposed on host | ✅ Allowed for debugging | ❌ FAIL | ❌ FAIL |
+| Password hashing (application) | ⚠️ WARN | ✅ Required | ✅ Required |
+| Non-root containers | ✅ Required always | ✅ Required | ✅ Required |
+| `.env.example` present | ✅ Required always | ✅ Required | ✅ Required |
+| `.dockerignore` present | ✅ Required always | ✅ Required | ✅ Required |
+| Network isolation (Compose) | ⚠️ WARN | ✅ Required | ✅ Required |
+| Resource limits (Compose) | ⬜ Optional | ✅ Required | ✅ Required |
+| Image scanning | ⬜ Recommended | ✅ Required | ✅ Required + block on CRITICAL |
+| Cookie security (HttpOnly, SameSite) | ⚠️ WARN | ✅ Required | ✅ Required |
+| Input validation | ⚠️ WARN | ✅ Required | ✅ Required |
+| File headers (development_rules §2) | ⬜ Optional | ✅ Required | ✅ Required |
+| Read-only filesystem | ⬜ Optional | ⚠️ WARN | ✅ Required |
+| XSS prevention (no raw innerHTML) | ⚠️ WARN | ✅ Required | ✅ Required |
+
+**Legend:** ✅ Required (FAIL if violated) | ⚠️ WARN (logged, execution may continue) | ⬜ Optional | ❌ Always FAIL
+
+> **Non-root containers are REQUIRED for ALL profiles** — there is no lab exemption.
+
+See `rules/security_profiles.md` for the complete reference.
+
+---
+
+## ✅ Compliance Checklist (STEP 5.0.5)
+
+At STEP 5.0.5, after non-regression and before build, the agent automatically runs all
+checks defined in `rules/output_checklist.json` and generates `output/compliance_report.md`.
+
+Severity is determined by `VAR_SECURITY_PROFILE` — the same check may be WARN in lab
+and FAIL in staging/production.
+
+| ID | Category | Rule | Lab | Staging | Production |
+|----|----------|------|-----|---------|------------|
+| SEC-001 | Security | No hardcoded secrets in docker-compose | WARN | FAIL | FAIL |
+| SEC-002 | Security | All Dockerfiles define non-root USER | FAIL | FAIL | FAIL |
+| SEC-003 | Security | `.env.example` exists | FAIL | FAIL | FAIL |
+| SEC-004 | Security | Database port not exposed on host | WARN | FAIL | FAIL |
+| SEC-005 | Security | No XSS via `innerHTML` with untrusted data | WARN | FAIL | FAIL |
+| DOCKER-001 | Docker | Network isolation defined in compose (≥2 networks) | WARN | FAIL | FAIL |
+| DOCKER-002 | Docker | `.dockerignore` present for each build context | FAIL | FAIL | FAIL |
+| DOCKER-003 | Docker | `docker-compose.dev.yml` exists | FAIL | FAIL | FAIL |
+| DEV-001 | Development | All source files have header block | WARN | FAIL | FAIL |
+| DEV-002 | Development | Source files within 200-line limit | WARN | WARN | FAIL |
+| TEST-001 | Testing | Minimum test count met | WARN | FAIL | FAIL |
+| TEST-002 | Testing | Negative tests present | WARN | FAIL | FAIL |
+
+If ANY check returns `FAIL` → the agent stops, presents the failures, and waits for user approval.
+If checks return only `WARN` → warnings are logged and execution continues.
+
+---
+
+## 🔄 Quick Workflow Summary
 
 ```
-STEP 0  Bootstrap       Docker check → Minikube check → Read rules/ → load test baseline → inventory MCP
-STEP 1  Resolution      Resolve version conflicts, confirm technical choices
-STEP 2  Plan            Design review gate → present execution plan → wait for user GO
-STEP 3  Backup          Pre-backup inventory (backup_manifest.json) → snapshot output/
+STEP 0  Bootstrap       Docker check → read rules/ → load test baseline → init session state
+STEP 1  Resolution      Resolve versions → classify environment → load security profile → user confirm
+STEP 2  Plan            Design review gate → ≥2 alternatives → wait for user GO
+STEP 3  Backup          backup_manifest.json → snapshot output/ → verify completeness
 STEP 4  Implement       TDD mandatory (RED-GREEN-REFACTOR) → generate code following rules/
-STEP 5  Validate        Non-regression check → Build → Run → Health check → Functional tests
-STEP 6  Rollback Gate   On FAIL: debugging protocol → Retry / Retry Extended / Rollback / Abort
-STEP 7  Consolidate     Git release (SemVer tag) → update state → archive specs → changelog
+STEP 5  Validate        Non-regression → Compliance check (5.0.5) → Build → Run → Tests → compliance_report.md
+STEP 6  Rollback Gate   On FAIL: debug protocol → Retry / Retry Extended / Rollback / Abort
+STEP 7  Consolidate     Update deployed_state.json → archive specs → changelog → Git release
 ```
 
 The session state (`session/session_state.json`) persists across AI context windows,
@@ -128,14 +331,32 @@ so you can pause and resume without losing progress.
 
 ---
 
-## 🐳 Supported Platforms
+## 📊 Session State Reference
 
-| Platform | Status | Notes |
-| :--- | :--- | :--- |
-| Docker Compose | ✅ Supported | Primary local development and deployment target |
-| Minikube (K8s) | ✅ Supported | Local Kubernetes testing via Minikube |
-| Cloud K8s (EKS/GKE/AKS) | 🗺 Roadmap | Planned for Phase 2 |
-| Nomad / Podman | 🗺 Roadmap | Planned for Phase 3 |
+All session variables are stored in `session/session_state.json` and read/written
+exclusively through that file (never from chat history alone).
+
+| Variable | Type | Description |
+|:---------|:-----|:------------|
+| `VAR_SESSION_STEP` | Integer | Current workflow step (0–7) |
+| `VAR_SOURCE_OF_TRUTH` | String | `CONFIG_JSON` or `DEPLOYED_STATE_JSON` |
+| `VAR_CONFIRMED_VERSIONS` | Object | Key-value map of confirmed tech versions, e.g. `{"node": "20"}` |
+| `VAR_DEPLOY_TARGET` | Array | Deploy targets, e.g. `["DOCKER", "K8S"]` |
+| `VAR_PROJECT_MODE` | String | `SCRATCH` or `INTEGRATION` |
+| `VAR_AVAILABLE_MCP` | Array | MCP servers discovered at bootstrap |
+| `VAR_VALIDATION_RESULT` | String | `PASS` or `FAIL` (set at STEP 5, based on executed evidence) |
+| `VAR_RETRY_COUNT` | Integer | Current retry count for STEP 4 (max 3) |
+| `VAR_GIT_ENABLED` | Boolean | `true` if `version_control.enabled` is `true` in config |
+| `VAR_CURRENT_VERSION` | String | Current project version in SemVer format |
+| `VAR_REGRESSION_CHECK` | String | `PASS`, `FAIL`, or `WARN` (set at STEP 5.0) |
+| `VAR_ACTIVE_BACKUP_PATH` | String | Path to the current backup folder |
+| `VAR_TEST_BASELINE` | Boolean | `true` if `output/test_playbook.md` was loaded at bootstrap |
+| `VAR_TEST_COUNT` | Integer | Number of tests in the loaded baseline (0 if none) |
+| `VAR_DOCKER_INSTALLED` | Boolean | `true` if Docker and Docker Compose are installed and functional |
+| `VAR_MINIKUBE_INSTALLED` | Boolean | `true` if Minikube is installed and functional |
+| `VAR_MINIKUBE_APPROVED` | Boolean | `true` if the user has authorized Minikube installation/usage |
+| `VAR_K8S_EXTERNALIZATION_MAP` | Object | Map of externalized configs (ConfigMaps, Secrets, env vars) |
+| `VAR_SECURITY_PROFILE` | String | Active security profile: `lab`, `staging`, or `production` |
 
 ---
 
@@ -153,6 +374,17 @@ Before using AAOF, ensure you have:
 
 ---
 
+## 🐳 Supported Platforms
+
+| Platform | Status | Notes |
+| :--- | :--- | :--- |
+| Docker Compose | ✅ Supported | Primary local development and deployment target |
+| Minikube (K8s) | ✅ Supported | Local Kubernetes testing via Minikube |
+| Cloud K8s (EKS/GKE/AKS) | 🗺 Roadmap | Planned for Phase 2 |
+| Nomad / Podman | 🗺 Roadmap | Planned for Phase 3 |
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Clone the repository
@@ -164,7 +396,7 @@ cd my-project
 
 ### 2. Configure your project
 
-Edit `config.json` to describe your stack and deployment targets:
+Edit `config.json` to describe your stack, deployment targets, and environment context:
 
 ```json
 {
@@ -175,7 +407,13 @@ Edit `config.json` to describe your stack and deployment targets:
     "frameworks": ["express"],
     "databases": ["postgresql"]
   },
-  "deploy_targets": ["DOCKER"]
+  "deploy_targets": ["DOCKER"],
+  "environment_context": {
+    "type": "lab",
+    "tls_required": false,
+    "external_access": false,
+    "secrets_strictness": "relaxed"
+  }
 }
 ```
 
@@ -196,15 +434,35 @@ For other agents, point them to `agent.md` as their primary instruction file.
 
 ### 5. Approve the plan and deploy
 
-The agent will present an execution plan at STEP 2. Review it, type **GO**, and watch
-your project get built inside Docker containers.
+The agent will:
+1. Bootstrap and classify your environment at STEP 1
+2. Present an execution plan at STEP 2 — review it and type **GO**
+3. Build and validate your project inside Docker containers
+4. Produce `output/compliance_report.md` with security and quality checks
+
+---
+
+## 🛡 Golden Rules
+
+The 8 golden rules that govern every agent action:
+
+| Rule | Plain Language |
+|------|----------------|
+| **No Assumptions** | If a technical parameter is ambiguous, the agent asks. It never guesses. |
+| **Documentation** | Every change must be traceable in `changelog.md`. |
+| **Persistence** | `session_state.json` is the only source of truth for session state. Chat history is not reliable. |
+| **Container-First** | All development and testing happens inside Docker containers. Nothing is installed on the host. |
+| **Security** | `rules/security_rules.md` applies at all times — no exceptions. Profile adjusts severity, never waives rules. |
+| **Test-First** | No production code without a failing test first — TDD is the Iron Law. |
+| **Evidence Over Claims** | `VAR_VALIDATION_RESULT` = PASS only after the agent has directly observed test results from executed commands. |
+| **Nothing Hardcoded Inside** | Every config that may vary between environments must be externalized as ConfigMap, Secret, or environment variable. |
 
 ---
 
 ## 🗺 Roadmap
 
-### Phase 1 — Foundation (current: v0.3.0)
-- [x] Core workflow (agent.md) with 7-step process
+### Phase 1 — Foundation (current: v0.4.0)
+- [x] Core workflow (agent.md) with 8-step process
 - [x] Rules library (development, docker, k8s, security, error handling, MCP)
 - [x] Validation & Rollback gates
 - [x] Templates for Docker and Kubernetes
@@ -218,6 +476,10 @@ your project get built inside Docker containers.
 - [x] Docker prerequisite auto-detection and guided installation
 - [x] Minikube optional check with persistent user choice
 - [x] K8s configuration externalization principle ("Nothing Hardcoded Inside")
+- [x] **Step Gate Machine** — programmatic preconditions/postconditions per step (`rules/workflow_gates.md`)
+- [x] **Security Profiles** — lab/staging/production enforcement tiers (`rules/security_profiles.md`)
+- [x] **Compliance Checklist** — automated machine-verifiable checks at STEP 5.0.5 (`rules/output_checklist.json`)
+- [x] **Environment Context** in `config.json` — explicit `environment_context.type`
 
 ### Phase 2 — Cloud & Advanced Deployments
 - [ ] Cloud Kubernetes support (EKS, GKE, AKS)

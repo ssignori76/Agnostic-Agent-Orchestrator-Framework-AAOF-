@@ -51,5 +51,13 @@
     "default_branch": "main",
     "auto_tag": true,
     "versioning": "semver"
+  },
+
+  "environment_context": {
+    "_comment": "Defines the deployment environment. type must be 'lab', 'staging', or 'production'. If not set, the agent will ask before proceeding past STEP 1.",
+    "type": "lab",
+    "tls_required": false,
+    "external_access": false,
+    "secrets_strictness": "relaxed"
   }
 }

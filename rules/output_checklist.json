@@ -1,0 +1,102 @@
+{
+  "checklist_version": "1.0",
+  "description": "Machine-verifiable compliance checks executed at STEP 5.0.5",
+  "checks": [
+    {
+      "id": "SEC-001",
+      "category": "security",
+      "rule": "No hardcoded secrets in docker-compose",
+      "how_to_verify": "Search for PASSWORD=, SECRET=, TOKEN= with literal values in docker-compose files",
+      "expected": "No matches (environment variable interpolation ${} is OK)",
+      "severity_by_profile": { "lab": "WARN", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "SEC-002",
+      "category": "security",
+      "rule": "All Dockerfiles define non-root USER",
+      "how_to_verify": "Every Dockerfile in output/ contains a USER directive before CMD/ENTRYPOINT",
+      "expected": "All Dockerfiles pass",
+      "severity_by_profile": { "lab": "FAIL", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "SEC-003",
+      "category": "security",
+      "rule": ".env.example exists",
+      "how_to_verify": "File output/.env.example exists",
+      "expected": "File present",
+      "severity_by_profile": { "lab": "FAIL", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "SEC-004",
+      "category": "security",
+      "rule": "Database port not exposed on host",
+      "how_to_verify": "No 3306:3306, 5432:5432, 27017:27017 in docker-compose port mappings",
+      "expected": "No matches",
+      "severity_by_profile": { "lab": "WARN", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "SEC-005",
+      "category": "security",
+      "rule": "No XSS via innerHTML with untrusted data",
+      "how_to_verify": "Search for innerHTML assignments using server data without sanitization in JS/HTML files",
+      "expected": "No unsafe patterns",
+      "severity_by_profile": { "lab": "WARN", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "DOCKER-001",
+      "category": "docker",
+      "rule": "Network isolation defined in compose",
+      "how_to_verify": "docker-compose.yml defines at least 2 named networks",
+      "expected": "≥2 networks",
+      "severity_by_profile": { "lab": "WARN", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "DOCKER-002",
+      "category": "docker",
+      "rule": ".dockerignore present for each build context",
+      "how_to_verify": "Each directory used as build context has a .dockerignore file",
+      "expected": "All contexts have .dockerignore",
+      "severity_by_profile": { "lab": "FAIL", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "DOCKER-003",
+      "category": "docker",
+      "rule": "docker-compose.dev.yml exists",
+      "how_to_verify": "File output/docker-compose.dev.yml exists",
+      "expected": "File present",
+      "severity_by_profile": { "lab": "FAIL", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "DEV-001",
+      "category": "development",
+      "rule": "All source files have header block",
+      "how_to_verify": "First 5 lines of each source file contain File: and Purpose:",
+      "expected": "All source files pass",
+      "severity_by_profile": { "lab": "WARN", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "DEV-002",
+      "category": "development",
+      "rule": "Source files within 200-line limit",
+      "how_to_verify": "wc -l on each source file in output/",
+      "expected": "All ≤200 lines",
+      "severity_by_profile": { "lab": "WARN", "staging": "WARN", "production": "FAIL" }
+    },
+    {
+      "id": "TEST-001",
+      "category": "testing",
+      "rule": "Minimum test count met",
+      "how_to_verify": "Count tests in test_results.md >= (endpoints×2 + DB_tables×3 + auth_flows×2)",
+      "expected": "Actual count ≥ minimum formula",
+      "severity_by_profile": { "lab": "WARN", "staging": "FAIL", "production": "FAIL" }
+    },
+    {
+      "id": "TEST-002",
+      "category": "testing",
+      "rule": "Negative tests present",
+      "how_to_verify": "test_results.md contains tests with expected error/denial outcomes",
+      "expected": "At least 1 negative test per endpoint category",
+      "severity_by_profile": { "lab": "WARN", "staging": "FAIL", "production": "FAIL" }
+    }
+  ]
+}
