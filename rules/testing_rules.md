@@ -156,10 +156,28 @@ This document enables a **human or a subsequent agent** to reproduce ALL tests i
 
 ## 4. Test Execution Rules
 
-1. ALL tests MUST run **inside Docker containers** (consistent with `rules/docker_rules.md`).
-2. Tests MUST be **repeatable**: no dependency on external state not controlled by the project.
-3. The test playbook (`test_playbook.md`) MUST be written **before** test execution.
-4. The agent at STEP 5 MUST follow this sequence:
+### 4.0 Self-Execution Rule (MANDATORY)
+
+**The agent MUST execute all tests itself using Docker containers.** The agent MUST NOT
+ask the user to run tests manually or delegate test execution to the user.
+
+The `test_playbook.md` is a **reproducibility document** — it exists so that a human
+or subsequent agent CAN reproduce the tests independently if needed. It is NOT a
+delegation mechanism.
+
+If the agent cannot execute a specific test (e.g., requires browser GUI interaction
+not available in the container, or a physical hardware device):
+1. The agent MUST clearly state **why** the test cannot be automated.
+2. The agent MUST execute **all other tests** it CAN run.
+3. The agent MUST document the manual-only tests in a separate section of
+   `test_playbook.md` titled "Manual-Only Tests (Agent Cannot Execute)".
+4. `VAR_VALIDATION_RESULT` is determined by the tests the agent DID execute.
+   Manual-only tests do NOT block the pipeline.
+
+5. ALL tests MUST run **inside Docker containers** (consistent with `rules/docker_rules.md`).
+6. Tests MUST be **repeatable**: no dependency on external state not controlled by the project.
+7. The test playbook (`test_playbook.md`) MUST be written **before** test execution.
+8. The agent at STEP 5 MUST follow this sequence:
    1. Generate `output/test_playbook.md`
    2. Execute all tests defined in the playbook
    3. Generate `output/test_results.md`

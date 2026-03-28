@@ -11,6 +11,28 @@ AAOF uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+**Testing Rules — Self-Execution Enforcement**
+- `rules/testing_rules.md` §4.0 — Self-Execution Rule: agent MUST execute all tests
+  itself inside Docker containers, MUST NOT delegate to user. Test playbook is a
+  reproducibility document, not a delegation mechanism. Manual-only tests documented
+  separately when agent cannot automate them
+
+**Validation Hardening**
+- `agent.md` STEP 5.5 — Evidence-Based Validation: `VAR_VALIDATION_RESULT` can only be
+  set after agent directly observes executed test results. Explicitly prohibits setting
+  PASS based on code review or user confirmation
+- `agent.md` STEP 5.4.1 — Kubernetes Validation sub-step: mandatory second validation
+  cycle on Minikube when `VAR_DEPLOY_TARGET` includes K8S (apply manifests, verify pods,
+  health check, functional tests on K8s endpoints). When `VAR_MINIKUBE_APPROVED` is
+  `false`, sub-step is skipped with a WARN logged; `VAR_VALIDATION_RESULT` is then based
+  on Docker validation results alone
+
+**Workflow Hardening**
+- `agent.md` STEP 2 — Minimum 2 alternatives enforcement: plan must include at least 2
+  architectural/technological alternatives with trade-offs per design review rules
+- `agent.md` STEP 3 — SCRATCH Project Baseline: empty `backup_manifest.json` generated
+  for new projects to establish non-regression baseline
+
 **Prerequisites & Environment Checks**
 - Docker Prerequisite Check at STEP 0 — mandatory verification of Docker and Docker Compose
   installation with auto-installation guidance. Blocking: framework stops if Docker is not
