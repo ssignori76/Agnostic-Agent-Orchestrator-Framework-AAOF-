@@ -61,7 +61,7 @@ at the end of STEP 4 with per-requirement verification results.
 | `requirements[].description` | String | Plain-language description of the requirement |
 | `requirements[].artifacts` | Array | List of file paths (relative to repo root) that must exist to satisfy this requirement |
 | `requirements[].verification` | String | How to verify satisfaction (e.g. "File exists and exports a createCart() function") |
-| `requirements[].status` | String | `pending` (initial), `pass`, or `fail` (set at STEP 4 contract check) |
+| `requirements[].status` | String | `pending` (initial), `pass`, `fail`, or `waived` (set at STEP 4 contract check; `waived` requires explicit user approval) |
 | `requirements[].evidence` | String | Notes recorded during verification (populated at STEP 4) |
 
 ---
@@ -100,8 +100,8 @@ At the end of STEP 4, **before advancing to STEP 5**, the agent MUST run the
    e. Record verification notes in the `evidence` field.
 3. **Count** passing and failing requirements.
 4. **Set `VAR_CONTRACT_CHECK`** in `session_state.json`:
-   - `"PASS"` if ALL requirements have `status == "pass"`
-   - `"FAIL"` if ANY requirement has `status == "fail"`
+   - `"PASS"` if ALL requirements have `status == "pass"` or `status == "waived"`
+   - `"FAIL"` if ANY requirement has `status == "fail"` or `status == "pending"`
 5. **Write** the updated `session/requirements_checklist.json` with all statuses filled in.
 6. **Log** the contract check result in `session/step_evidence.json` under the
    transition from STEP 4 to STEP 5 (see §5).

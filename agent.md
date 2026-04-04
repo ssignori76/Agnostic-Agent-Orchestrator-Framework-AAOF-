@@ -165,9 +165,9 @@ Every step transition is governed by the gates defined in `rules/workflow_gates.
 6. Inventory your available MCP servers; record them in `VAR_AVAILABLE_MCP`.
 7. Read `config.json` and the optional `output/deployed_state.json`.
 8. **Session Check:** If `session/session_state.json` exists, load it to resume progress.
-   - Additionally, if `session/requirements_checklist.json` exists, load it to resume the
-     active requirements checklist. This ensures the contract check state is preserved
-     across sessions.
+   - Additionally, if `session/requirements_checklist.json` exists (indicating the session
+     has already progressed past STEP 2), load it to resume the active requirements
+     checklist. This ensures the contract check state is preserved across sessions.
 9. **Git Integration Check:** If `version_control.enabled` is `true` in `config.json`,
    read and apply `rules/git_rules.md` as operational directives. Set `VAR_GIT_ENABLED`
    to `true` in `session_state.json`. **If `false` or absent, set `VAR_GIT_ENABLED` to `false`.**
