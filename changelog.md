@@ -9,6 +9,13 @@ AAOF uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- `AGENT_ORCHESTRATOR.md` — Dynamic relaunch limit based on project complexity (5/8/12) (§4.4)
+- `AGENT_ORCHESTRATOR.md` — Step-aware relaunch prompts for sub-agents (§4.3)
+- `AGENT_ORCHESTRATOR.md` — Improved orchestrator state persistence with `limite_rilanci` field (§6)
+- `README.md` — Added third standard prompt for orchestrator session resume (Prompt 3)
+- `prompts/resume_prompt.md` — Added step-specific resume instructions
+
 ---
 
 ## [0.5.0] — 2026-04-05
