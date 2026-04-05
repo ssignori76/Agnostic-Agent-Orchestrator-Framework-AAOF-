@@ -563,8 +563,11 @@ Orchestrator Agent (Agent A)
 
 The orchestrator monitors `session/session_state.json` after each sub-agent run. If
 `VAR_SESSION_STEP` < 7, the sub-agent did not finish and the orchestrator relaunches it
-with the resume prompt. Up to 5 relaunch attempts are supported before the orchestrator
-notifies the user.
+with an optimised, step-aware resume prompt. The maximum number of relaunch attempts is
+determined dynamically by project complexity: **5** for simple projects (1–5 requirements),
+**8** for medium projects (6–15 requirements), and **12** for complex projects (16+
+requirements). When the limit is reached the orchestrator saves its state and asks you to
+resume it with Prompt 3 below.
 
 ### Ready-to-use prompts
 
@@ -595,6 +598,24 @@ Segui le istruzioni contenute nel file.
 Read the AGENT_ORCHESTRATOR.md file in this directory.
 Follow the instructions contained in the file.
 ```
+
+**Prompt 3 — Resume (when the orchestrator has exhausted its turns) (Italian):**
+
+```
+Leggi AGENT_ORCHESTRATOR.md e .aaof/orchestrator_state.json e continua il lavoro.
+```
+
+**Prompt 3 — Resume (when the orchestrator has exhausted its turns) (English):**
+
+```
+Read AGENT_ORCHESTRATOR.md and .aaof/orchestrator_state.json and continue the work.
+```
+
+- **Prompt 1** and **Prompt 2** are used to start a new project (choose based on whether
+  the repo is already cloned locally).
+- **Prompt 3** is used when the orchestrator has exhausted its turns and has asked to be
+  relaunched. The file `.aaof/orchestrator_state.json` is created automatically by the
+  orchestrator before it stops.
 
 See [`AGENT_ORCHESTRATOR.md`](AGENT_ORCHESTRATOR.md) for the full orchestrator guide,
 including turn limit recovery, state persistence, and the complete relaunch protocol.
